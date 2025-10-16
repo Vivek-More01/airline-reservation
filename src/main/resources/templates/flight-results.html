@@ -2,61 +2,61 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flight Results</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
 <body class="bg-gray-100">
+    <div th:replace="~{header :: navbar}"></div>
 
-<!-- Include the header fragment -->
-<div th:replace="~{header :: navbar}"></div>
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Available Flights</h1>
 
-<div class="container mx-auto mt-10 p-4">
-    <div class="bg-white p-8 rounded-lg shadow-lg">
-        <h1 class="text-3xl font-bold mb-6 text-gray-800">Available Flights</h1>
+            <!-- Display error message if any -->
+            <div th:if="${errorMessage}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong class="font-bold">Error!</strong>
+                <span class="block sm:inline" th:text="${errorMessage}"></span>
+            </div>
+            
+            <div th:if="${flights.isEmpty()}" class="text-center py-10">
+                <p class="text-xl text-gray-600">No flights found for the selected route and date.</p>
+            </div>
 
-        <!-- Show this message if no flights are found -->
-        <div th:if="${flights.isEmpty()}" class="text-center text-gray-600">
-            <p class="text-xl">Sorry, no flights were found for the selected route and date.</p>
+            <div th:if="${!flights.isEmpty()}" class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Airline</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Departure</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Arrival</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700">
+                        <tr th:each="flight : ${flights}" class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-4 px-4" th:text="${flight.airline}">Emirates</td>
+                            <td class="py-4 px-4" th:text="${#temporals.format(flight.departure, 'dd MMM yyyy, HH:mm')}">16 Oct 2025, 10:00</td>
+                            <td class="py-4 px-4" th:text="${#temporals.format(flight.arrival, 'dd MMM yyyy, HH:mm')}">16 Oct 2025, 22:00</td>
+                            <td class="py-4 px-4 font-semibold" th:text="'$' + ${#numbers.formatDecimal(flight.price, 1, 2)}">$650.00</td>
+                            <td class="py-4 px-4 text-right">
+                                <!-- THIS IS THE CRUCIAL CHANGE -->
+                                <!-- This link now points to your React application's development server -->
+                                <a th:href="@{'http://localhost:3000/?flightId=' + ${flight.flightId}}"
+                                   class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+                                    Select Seat
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-        <!-- Show the results table if flights are found -->
-        <div th:if="${!flights.isEmpty()}" class="overflow-x-auto">
-            <table class="min-w-full bg-white">
-                <thead class="bg-gray-800 text-white">
-                    <tr>
-                        <th class="py-3 px-4 uppercase font-semibold text-sm">Airline</th>
-                        <th class="py-3 px-4 uppercase font-semibold text-sm">From</th>
-                        <th class="py-3 px-4 uppercase font-semibold text-sm">To</th>
-                        <th class="py-3 px-4 uppercase font-semibold text-sm">Departure</th>
-                        <th class="py-3 px-4 uppercase font-semibold text-sm">Arrival</th>
-                        <th class="py-3 px-4 uppercase font-semibold text-sm">Price</th>
-                        <th class="py-3 px-4 uppercase font-semibold text-sm">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-700">
-                    <!-- Loop through each flight in the list -->
-                    <tr th:each="flight : ${flights}" class="hover:bg-gray-100">
-                        <td class="py-3 px-4" th:text="${flight.airline}"></td>
-                        <td class="py-3 px-4" th:text="${flight.source}"></td>
-                        <td class="py-3 px-4" th:text="${flight.destination}"></td>
-                        <td class="py-3 px-4" th:text="${#temporals.format(flight.departure, 'MMM-dd, HH:mm')}"></td>
-                        <td class="py-3 px-4" th:text="${#temporals.format(flight.arrival, 'MMM-dd, HH:mm')}"></td>
-                        <td class="py-3 px-4" th:text="|${flight.price} USD|"></td>
-                        <td class="py-3 px-4">
-                            <!-- Link to booking page (functionality to be added) -->
-                           <form th:action="@{/book/{id}(id=${flight.flightId})}" method="post">
-                                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
-                                            th:disabled="${flight.seatsAvailable == 0}">
-                                        Book Now
-                                    </button>
-                                </form>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
+    </main>
 </body>
 </html>
+

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -22,31 +23,48 @@ public class BookingService {
         this.flightRepository = flightRepository;
     }
 
-    @Transactional // Ensures the entire method is one single database transaction
-    public Booking createBooking(Flight flight, User user) {
-        // 1. Check if seats are available
+    @Transactional
+    public Booking createBooking(User user, int flightId, String seatNumber) {
+        // 1. Find the flight the user wants to book.
+        Flight flight = flightRepository.findById(flightId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid flight ID: " + flightId));
+
+        // 2. Check if there are any seats available at all.
         if (flight.getSeatsAvailable() <= 0) {
-            throw new IllegalStateException("No seats available for this flight.");
+            throw new IllegalStateException("No seats available on this flight.");
         }
 
-        // 2. Decrease the number of available seats and update the flight
+        // 3. Check if the specific seat is already booked.
+        boolean isSeatTaken = flight.getBookings().stream()
+                .anyMatch(booking -> seatNumber.equalsIgnoreCase(booking.getSeat()));
+
+        if (isSeatTaken) {
+            throw new IllegalStateException("Seat " + seatNumber + " is already taken.");
+        }
+
+        // 4. Update the flight's seat count and save it.
         flight.setSeatsAvailable(flight.getSeatsAvailable() - 1);
         flightRepository.save(flight);
 
-        // 3. Create a new booking record
+        // 5. Create the new booking object.
         Booking booking = new Booking();
-        booking.setFlight(flight);
         booking.setUser(user);
+        booking.setFlight(flight);
+        booking.setSeat(seatNumber); // Set the user-chosen seat number
         booking.setBookingDate(LocalDateTime.now());
         booking.setStatus("CONFIRMED");
-        booking.setSeat("Seat-" + (flight.getSeatsTotal() - flight.getSeatsAvailable())); // Simple seat assignment
         // Generate a unique Passenger Name Record (PNR)
-        booking.setPnr(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        booking.setPnr(generatePnr());
 
+        // 6. Save and return the new booking.
         return bookingRepository.save(booking);
     }
 
-    // public Optional<Booking> findById(int id) {
-    //     return bookingRepository.findById(id);
-    // }
+    public Optional<Booking> findById(Integer bookingId) {
+        return bookingRepository.findById(bookingId);
+    }
+
+    private String generatePnr() {
+        return UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
 }

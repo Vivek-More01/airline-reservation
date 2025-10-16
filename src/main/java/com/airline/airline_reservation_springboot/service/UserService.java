@@ -76,5 +76,9 @@ public class UserService {
         }
         return hexString.toString();
     }
+
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
 }
 

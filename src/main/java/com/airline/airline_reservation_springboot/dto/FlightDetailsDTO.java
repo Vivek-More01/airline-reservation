@@ -1,39 +1,31 @@
-package com.airline.airline_reservation_springboot.model;
+package com.airline.airline_reservation_springboot.dto;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
+import com.airline.airline_reservation_springboot.model.Flight;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "flight")
-public class Flight {
+public class FlightDetailsDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "flight_id")
     private int flightId;
-
     private String airline;
     private String source;
     private String destination;
     private LocalDateTime departure;
     private LocalDateTime arrival;
-
-    @Column(name = "seats_total")
-    private int seatsTotal;
-
-    @Column(name = "seats_available")
-    private int seatsAvailable;
-
     private BigDecimal price;
+    private List<String> bookedSeats;
 
-    // This is the new relationship mapping
-    @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference // Manages the forward part of the relationship for JSON
-    private List<Booking> bookings = new ArrayList<>();
+    public FlightDetailsDTO(Flight flight, List<String> bookedSeats) {
+        this.flightId = flight.getFlightId();
+        this.airline = flight.getAirline();
+        this.source = flight.getSource();
+        this.destination = flight.getDestination();
+        this.departure = flight.getDeparture();
+        this.arrival = flight.getArrival();
+        this.price = flight.getPrice();
+        this.bookedSeats = bookedSeats;
+    }
 
     // --- Getters and Setters ---
 
@@ -85,22 +77,6 @@ public class Flight {
         this.arrival = arrival;
     }
 
-    public int getSeatsTotal() {
-        return seatsTotal;
-    }
-
-    public void setSeatsTotal(int seatsTotal) {
-        this.seatsTotal = seatsTotal;
-    }
-
-    public int getSeatsAvailable() {
-        return seatsAvailable;
-    }
-
-    public void setSeatsAvailable(int seatsAvailable) {
-        this.seatsAvailable = seatsAvailable;
-    }
-
     public BigDecimal getPrice() {
         return price;
     }
@@ -109,12 +85,11 @@ public class Flight {
         this.price = price;
     }
 
-    // This is the new getter that BookingService needs
-    public List<Booking> getBookings() {
-        return bookings;
+    public List<String> getBookedSeats() {
+        return bookedSeats;
     }
 
-    public void setBookings(List<Booking> bookings) {
-        this.bookings = bookings;
+    public void setBookedSeats(List<String> bookedSeats) {
+        this.bookedSeats = bookedSeats;
     }
 }

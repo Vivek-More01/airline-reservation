@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Select Your Seat - Airbus A320</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        .seat {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid;
+            font-size: 12px;
+        }
+        .seat-available { background-color: white; border-color: #9ca3af; color: #6b7280; }
+        .seat-available:hover { background-color: #dbeafe; border-color: #3b82f6; }
+        .seat-selected { background-color: #2563eb; border-color: #1d4ed8; color: white; transform: scale(1.1); }
+        .seat-booked { background-color: #e5e7eb; border-color: #d1d5db; color: #9ca3ba; cursor: not-allowed; }
+        .seat-preferred { border-color: #f59e0b; background-color: #fef9c3; color: #ca8a04; }
+        .seat-preferred:hover:not(.seat-selected) { background-color: #fde68a; }
+        .seat-exit-row { border-color: #16a34a; background-color: #dcfce7; color: #15803d; }
+        .seat-exit-row:hover:not(.seat-selected) { background-color: #bbf7d0; }
+        .seat-limited-recline { border-color: #dc2626; background-color: #fee2e2; color: #b91c1c; }
+        .seat-limited-recline:hover:not(.seat-selected) { background-color: #fecaca; }
+
+        .plane-feature {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Main Application Component
+        const SeatSelectionApp = () => {
+            const [flightDetails, setFlightDetails] = useState(null);
+            const [bookedSeats, setBookedSeats] = useState(['2A', '5C', '11B', '18F', '24A']); // Example booked seats
+            const [selectedSeat, setSelectedSeat] = useState(null);
+            const [isLoading, setIsLoading] = useState(false); // Changed to false for direct demo
+            const [error, setError] = useState(null);
+            const [bookingStatus, setBookingStatus] = useState({ state: 'idle', message: '' });
+
+            // Dummy flight data for display
+            const flightId = '123'; // Dummy ID
+             useEffect(() => {
+                setFlightDetails({
+                    source: "New York (JFK)",
+                    destination: "London (LHR)",
+                    airline: "Global Airways"
+                });
+            }, []);
+
+
+            // Handle seat selection
+            const handleSelectSeat = (seatId) => {
+                if (bookedSeats.includes(seatId)) return;
+                setSelectedSeat(seatId === selectedSeat ? null : seatId);
+            };
+
+            // Handle final booking submission
+            const handleConfirmBooking = () => {
+                if (!selectedSeat) return;
+                setBookingStatus({ state: 'loading', message: '' });
+                // Simulate API call
+                setTimeout(() => {
+                   setBookingStatus({ state: 'success', message: `Booking confirmed for seat ${selectedSeat}!` });
+                }, 1000);
+            };
+
+            if (isLoading) return <div className="text-center p-10">Loading Seat Map...</div>;
+            if (error) return <div className="text-center p-10 text-red-500">Error: {error}</div>;
+
+            if (bookingStatus.state === 'success') {
+                return (
+                    <div className="flex items-center justify-center min-h-screen">
+                        <div className="bg-white p-8 rounded-lg shadow-xl text-center">
+                            <h1 className="text-3xl font-bold text-green-600 mb-4">Booking Successful!</h1>
+                            <p className="text-lg text-gray-700">{bookingStatus.message}</p>
+                            <a href="#" onClick={() => window.location.reload()} className="mt-6 inline-block bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">Book Another Flight</a>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container mx-auto p-4 md:p-8">
+                    <FlightInfo flight={flightDetails} />
+                    <div className="bg-white rounded-lg shadow-xl p-6 mt-6">
+                        <div className="flex justify-center mb-6">
+                            <Legend />
+                        </div>
+                        <AirplaneLayout 
+                            bookedSeats={bookedSeats} 
+                            selectedSeat={selectedSeat} 
+                            onSelectSeat={handleSelectSeat} 
+                        />
+                    </div>
+                    <BookingActions 
+                        selectedSeat={selectedSeat}
+                        onConfirm={handleConfirmBooking}
+                        status={bookingStatus}
+                    />
+                </div>
+            );
+        };
+
+        // Component to display flight info header
+        const FlightInfo = ({ flight }) => (
+            <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+                <h1 className="text-2xl md:text-4xl font-bold text-gray-800">Select Your Seat</h1>
+                {flight && <p className="text-lg text-gray-600 mt-2">
+                    {flight.source} to {flight.destination} on <span className="font-semibold">{flight.airline}</span>
+                </p>}
+            </div>
+        );
+
+        // Component for the seat map legend
+        const Legend = () => (
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2"><div className="w-5 h-5 rounded seat-preferred"></div> Preferred</div>
+                <div className="flex items-center gap-2"><div className="w-5 h-5 rounded seat-exit-row"></div> Exit Row</div>
+                <div className="flex items-center gap-2"><div className="w-5 h-5 rounded seat-limited-recline"></div> Limited Recline</div>
+                <div className="flex items-center gap-2"><div className="w-5 h-5 rounded seat-available"></div> Available</div>
+                <div className="flex items-center gap-2"><div className="w-5 h-5 rounded seat-selected"></div> Selected</div>
+                <div className="flex items-center gap-2"><div className="w-5 h-5 rounded seat-booked"></div> Booked</div>
+            </div>
+        );
+
+        // Component to render the Airbus A320 layout
+        const AirplaneLayout = ({ bookedSeats, selectedSeat, onSelectSeat }) => {
+            const rows = Array.from({ length: 25 }, (_, i) => i + 1);
+            const cols = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+            const getSeatType = (rowNum) => {
+                if ([1, 2, 3, 4, 12].includes(rowNum)) return 'preferred';
+                if ([10, 11].includes(rowNum)) return 'exit-row';
+                if (rowNum === 24) return 'limited-recline';
+                return 'available';
+            };
+
+            return (
+                <div className="flex flex-col items-center p-4 overflow-x-auto">
+                     <div className="relative w-full max-w-sm">
+                        {/* Fuselage */}
+                        <div className="bg-gray-200 rounded-t-3xl pt-10 px-4 pb-4 relative">
+                            {/* Front Features */}
+                            <div className="grid grid-cols-3 gap-4 mb-4">
+                                <div className="plane-feature col-span-1">🚻 Lav</div>
+                                <div className="plane-feature col-span-2">☕ Galley</div>
+                            </div>
+                            
+                            {/* Seats */}
+                            {rows.map(rowNum => {
+                                const seatType = getSeatType(rowNum);
+                                return (
+                                <div key={rowNum} className="flex justify-center items-center gap-4 mb-2">
+                                    <div className="w-6 text-center font-semibold text-gray-500">{rowNum}</div>
+                                    <div className="flex gap-2">
+                                        {cols.slice(0, 3).map(col => (
+                                            <Seat key={`${rowNum}${col}`} id={`${rowNum}${col}`} type={seatType} bookedSeats={bookedSeats} selectedSeat={selectedSeat} onSelectSeat={onSelectSeat} />
+                                        ))}
+                                    </div>
+                                    <div className="w-8"></div> {/* Aisle */}
+                                    <div className="flex gap-2">
+                                        {cols.slice(3, 6).map(col => (
+                                            <Seat key={`${rowNum}${col}`} id={`${rowNum}${col}`} type={seatType} bookedSeats={bookedSeats} selectedSeat={selectedSeat} onSelectSeat={onSelectSeat} />
+                                        ))}
+                                    </div>
+                                    <div className="w-6 text-center font-semibold text-gray-500">{rowNum}</div>
+                                </div>
+                            )})}
+                            
+                            {/* Rear Features */}
+                            <div className="grid grid-cols-3 gap-4 mt-4">
+                                <div className="plane-feature col-span-1">🚻 Lav</div>
+                                <div className="plane-feature col-span-1">🚻 Lav</div>
+                                <div className="plane-feature col-span-1">☕ Galley</div>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+            );
+        };
+
+        // Component for a single seat
+        const Seat = ({ id, type, bookedSeats, selectedSeat, onSelectSeat }) => {
+            const isBooked = bookedSeats.includes(id);
+            const isSelected = selectedSeat === id;
+
+            let seatClass = 'seat ';
+            if (isBooked) seatClass += 'seat-booked';
+            else if (isSelected) seatClass += 'seat-selected';
+            else seatClass += `seat-${type}`;
+            
+            return <div className={seatClass} onClick={() => onSelectSeat(id)}>{id.substring(id.length-1)}</div>;
+        };
+
+        // Component for booking confirmation button and status
+        const BookingActions = ({ selectedSeat, onConfirm, status }) => (
+            <div className="mt-8 text-center">
+                {status.state === 'error' && <p className="text-red-500 font-bold mb-4">{status.message}</p>}
+                <button 
+                    onClick={onConfirm}
+                    disabled={!selectedSeat || status.state === 'loading'}
+                    className="bg-green-600 text-white font-bold text-lg py-3 px-12 rounded-lg shadow-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-300"
+                >
+                    {status.state === 'loading' ? 'Booking...' : `Confirm Seat ${selectedSeat || ''}`}
+                </button>
+            </div>
+        );
+
+        // Render the app into the DOM
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SeatSelectionApp />);
+    </script>
+</body>
+</html>
+
