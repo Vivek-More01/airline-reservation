@@ -15,13 +15,14 @@ public class Booking {
 
     // This is the "child" side. It will not be serialized, breaking the loop.
     // The name "user" MUST exactly match the mappedBy value in the User class.
-    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference // Tells Jackson this is the "back" part, preventing the loop
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "flight_id", nullable = false)
+    @JsonBackReference("flight-booking") // Added back reference
     private Flight flight;
 
     @Column(nullable = false)

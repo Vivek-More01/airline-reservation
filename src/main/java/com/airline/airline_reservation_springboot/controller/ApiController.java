@@ -2,6 +2,7 @@ package com.airline.airline_reservation_springboot.controller;
 
 import com.airline.airline_reservation_springboot.dto.BookingRequest;
 import com.airline.airline_reservation_springboot.dto.FlightDetailsDTO;
+import com.airline.airline_reservation_springboot.dto.UserDTO;
 import com.airline.airline_reservation_springboot.model.Booking;
 import com.airline.airline_reservation_springboot.model.Flight;
 import com.airline.airline_reservation_springboot.model.User;
@@ -79,11 +80,14 @@ public class ApiController {
     }
 
     @GetMapping("/user/me")
-    public ResponseEntity<User> getCurrentUser(HttpSession session) {
+    public ResponseEntity<UserDTO> getCurrentUser(HttpSession session) {
         User currentUser = (User) session.getAttribute("user");
         if (currentUser != null) {
-            return ResponseEntity.ok(currentUser);
+            // Convert the User entity to a DTO before sending it as a response
+            UserDTO userDTO = userService.convertToDTO(currentUser);
+            return ResponseEntity.ok(userDTO);
         }
+        // If no user is in the session, return an "Unauthorized" status
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 }

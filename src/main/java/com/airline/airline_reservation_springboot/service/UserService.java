@@ -1,5 +1,6 @@
 package com.airline.airline_reservation_springboot.service;
 
+import com.airline.airline_reservation_springboot.dto.UserDTO;
 import com.airline.airline_reservation_springboot.model.User;
 import com.airline.airline_reservation_springboot.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -79,6 +80,10 @@ public class UserService {
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    public UserDTO convertToDTO(User user) {
+        return new UserDTO(user.getUserId(), user.getName(), user.getEmail(), user.getRole());
     }
 }
 

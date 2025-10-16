@@ -20,9 +20,11 @@ function App() {
         if (response.ok) {
           return response.json();
         }
+        console.log("User session:");
         return null; // Not logged in
       })
       .then((user) => {
+        console.log("User session:", user);
         setCurrentUser(user); // Store the user, or null if not logged in
       })
       .catch((err) => console.error("Error fetching user session:", err));

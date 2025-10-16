@@ -1,5 +1,6 @@
 package com.airline.airline_reservation_springboot.service;
 
+import com.airline.airline_reservation_springboot.dto.BookingConfirmationDTO;
 import com.airline.airline_reservation_springboot.model.Booking;
 import com.airline.airline_reservation_springboot.model.Flight;
 import com.airline.airline_reservation_springboot.model.User;
@@ -62,6 +63,31 @@ public class BookingService {
 
     public Optional<Booking> findById(Integer bookingId) {
         return bookingRepository.findById(bookingId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<BookingConfirmationDTO> getBookingConfirmationDetails(Integer bookingId) {
+        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            // Because this method is transactional, we can safely access the lazy-loaded user and flight objects.
+            User user = booking.getUser();
+            Flight flight = booking.getFlight();
+
+            // Manually build the DTO with all the data we need.
+            BookingConfirmationDTO dto = new BookingConfirmationDTO(
+                booking.getPnr(),
+                booking.getSeat(),
+                booking.getBookingDate(),
+                user.getName(),
+                flight.getAirline(),
+                flight.getSource(),
+                flight.getDestination()
+            );
+            return Optional.of(dto);
+        }
+        return Optional.empty();
     }
 
     private String generatePnr() {

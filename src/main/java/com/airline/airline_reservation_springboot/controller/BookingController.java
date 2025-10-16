@@ -1,5 +1,6 @@
 package com.airline.airline_reservation_springboot.controller;
 
+import com.airline.airline_reservation_springboot.dto.BookingConfirmationDTO;
 import com.airline.airline_reservation_springboot.model.Booking;
 // import com.airline.airline_reservation_springboot.model.Flight;
 // import com.airline.airline_reservation_springboot.model.User;
@@ -31,16 +32,14 @@ public class BookingController {
      */
     @GetMapping("/booking-confirmation/{bookingId}")
     public String showBookingConfirmation(@PathVariable("bookingId") Integer bookingId, Model model) {
-        // Find the booking by the ID provided in the URL
-        Optional<Booking> bookingOpt = bookingService.findById(bookingId);
+        // Call the new service method that returns the DTO
+        Optional<BookingConfirmationDTO> dtoOpt = bookingService.getBookingConfirmationDetails(bookingId);
 
-        if (bookingOpt.isPresent()) {
-            // If the booking is found, add it to the model for the template to use
-            model.addAttribute("booking", bookingOpt.get());
-            // Return the name of the HTML page to display
+        if (dtoOpt.isPresent()) {
+            // Add the clean DTO to the model
+            model.addAttribute("booking", dtoOpt.get());
             return "booking-confirmation";
         } else {
-            // If no booking with that ID exists, redirect to the homepage
             return "redirect:/";
         }
     }

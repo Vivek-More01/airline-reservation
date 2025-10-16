@@ -24,8 +24,9 @@ public class User {
 
     private String role;
 
-    @JsonManagedReference
+    // THIS IS THE CRUCIAL CHANGE
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference // Tells Jackson this is the "forward" part of the relationship
     private List<Booking> bookings;
 
     @Column(name = "password_hash")
