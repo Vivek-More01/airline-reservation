@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SkyWay | Sign in</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/auth.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="brand" aria-label="SkyWay Home">
+          <img src="../public/assets/logo.svg" alt="SkyWay logo" class="brand-mark" width="28" height="28" />
+          <span class="logo">SkyWay</span>
+        </a>
+        <nav class="nav">
+          <a href="index.html#search" class="nav-link">Book</a>
+          <a href="index.html#deals" class="nav-link">Deals</a>
+          <a href="index.html#destinations" class="nav-link">Destinations</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="auth-page">
+      <section class="auth-section">
+        <div class="container auth-container">
+          <div class="auth-card">
+            <h1>Sign in</h1>
+            <p class="muted">Access your bookings and manage trips.</p>
+            <!-- Social Login Buttons -->
+            <div class="social-auth">
+              <button type="button" class="btn btn-google btn-lg" onclick="signInWithGoogle()">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+                  <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                  <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                  <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                </svg>
+                Continue with Google
+              </button>
+              <button type="button" class="btn btn-facebook btn-lg" onclick="signInWithFacebook()">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 9.045C18 4.05 13.97 0 9 0S0 4.05 0 9.045c0 4.52 3.29 8.265 7.593 8.94v-6.33H5.308V9.045h2.285V7.07c0-2.275 1.343-3.532 3.398-3.532.985 0 2.017.177 2.017.177v2.238h-1.136c-1.118 0-1.467.7-1.467 1.42v1.672h2.496l-.399 2.61h-2.097v6.33C14.71 17.31 18 13.565 18 9.045z" fill="#1877F2"/>
+                </svg>
+                Continue with Facebook
+              </button>
+            </div>
+
+            <div class="divider">
+              <span>or</span>
+            </div>
+
+            <form id="loginForm" novalidate>
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required />
+              </div>
+              <div class="field">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required />
+              </div>
+              <div class="auth-actions">
+                <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">Sign in with Email</button>
+                <a href="#" class="btn btn-link">Forgot password?</a>
+              </div>
+              <p class="form-hint" id="loginHint" role="status" aria-live="polite"></p>
+            </form>
+            <div class="auth-footer">
+              <p>Don't have an account? <a href="pages/signup.html">Sign up</a></p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div>
+          <a href="index.html" class="brand brand-footer" aria-label="SkyWay Home">
+            <img src="../public/assets/logo.svg" alt="SkyWay logo" class="brand-mark" width="24" height="24" />
+            <span class="logo">SkyWay</span>
+          </a>
+          <p class="muted">© <span id="year"></span> SkyWay Airlines. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/auth.js"></script>
+  </body>
+</html>

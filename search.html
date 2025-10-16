@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SkyWay | Flight Results</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/search.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="brand" aria-label="SkyWay Home">
+          <img src="../public/assets/logo.svg" alt="SkyWay logo" class="brand-mark" width="28" height="28" />
+          <span class="logo">SkyWay</span>
+        </a>
+        <nav class="nav">
+          <a href="index.html#search" class="nav-link">Book</a>
+          <a href="index.html#deals" class="nav-link">Deals</a>
+          <a href="index.html#destinations" class="nav-link">Destinations</a>
+          <a href="login.html" class="btn btn-link">Sign in</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="search-results-page">
+      <div class="container">
+        <div class="search-summary">
+          <h1 id="searchTitle">Flight Results</h1>
+          <p id="searchSubtitle" class="muted">Searching for the best flights...</p>
+        </div>
+
+        <div class="results-container">
+          <aside class="filters-sidebar">
+            <h3>Filter Results</h3>
+            <div class="filter-group">
+              <h4>Price Range</h4>
+              <div class="price-range">
+                <input type="range" id="priceRange" min="0" max="2000" value="2000" />
+                <div class="price-labels">
+                  <span>$0</span>
+                  <span id="maxPrice">$2000</span>
+                </div>
+              </div>
+            </div>
+            <div class="filter-group">
+              <h4>Airlines</h4>
+              <div class="checkbox-group" id="airlineFilters">
+                <!-- Airlines will be populated by JavaScript -->
+              </div>
+            </div>
+            <div class="filter-group">
+              <h4>Departure Time</h4>
+              <div class="checkbox-group">
+                <label class="checkbox">
+                  <input type="checkbox" value="morning" />
+                  <span>Morning (6AM - 12PM)</span>
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" value="afternoon" />
+                  <span>Afternoon (12PM - 6PM)</span>
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" value="evening" />
+                  <span>Evening (6PM - 12AM)</span>
+                </label>
+              </div>
+            </div>
+          </aside>
+
+          <div class="results-main">
+            <div class="results-header">
+              <div class="results-count">
+                <span id="resultsCount">0 flights found</span>
+              </div>
+              <div class="sort-options">
+                <label for="sortBy">Sort by:</label>
+                <select id="sortBy">
+                  <option value="price">Price (Low to High)</option>
+                  <option value="departure">Departure Time</option>
+                  <option value="duration">Duration</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="flightResults" class="flight-results">
+              <div class="loading">
+                <div class="spinner"></div>
+                <p>Searching for flights...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div>
+          <a href="index.html" class="brand brand-footer" aria-label="SkyWay Home">
+            <img src="../public/assets/logo.svg" alt="SkyWay logo" class="brand-mark" width="24" height="24" />
+            <span class="logo">SkyWay</span>
+          </a>
+          <p class="muted">© <span id="year"></span> SkyWay Airlines. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/search.js"></script>
+  </body>
+</html>
