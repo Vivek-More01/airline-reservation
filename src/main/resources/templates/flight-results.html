@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Flight Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+<!-- Include the header fragment -->
+<div th:replace="~{header :: navbar}"></div>
+
+<div class="container mx-auto mt-10 p-4">
+    <div class="bg-white p-8 rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">Available Flights</h1>
+
+        <!-- Show this message if no flights are found -->
+        <div th:if="${flights.isEmpty()}" class="text-center text-gray-600">
+            <p class="text-xl">Sorry, no flights were found for the selected route and date.</p>
+        </div>
+
+        <!-- Show the results table if flights are found -->
+        <div th:if="${!flights.isEmpty()}" class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-800 text-white">
+                    <tr>
+                        <th class="py-3 px-4 uppercase font-semibold text-sm">Airline</th>
+                        <th class="py-3 px-4 uppercase font-semibold text-sm">From</th>
+                        <th class="py-3 px-4 uppercase font-semibold text-sm">To</th>
+                        <th class="py-3 px-4 uppercase font-semibold text-sm">Departure</th>
+                        <th class="py-3 px-4 uppercase font-semibold text-sm">Arrival</th>
+                        <th class="py-3 px-4 uppercase font-semibold text-sm">Price</th>
+                        <th class="py-3 px-4 uppercase font-semibold text-sm">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700">
+                    <!-- Loop through each flight in the list -->
+                    <tr th:each="flight : ${flights}" class="hover:bg-gray-100">
+                        <td class="py-3 px-4" th:text="${flight.airline}"></td>
+                        <td class="py-3 px-4" th:text="${flight.source}"></td>
+                        <td class="py-3 px-4" th:text="${flight.destination}"></td>
+                        <td class="py-3 px-4" th:text="${#temporals.format(flight.departure, 'MMM-dd, HH:mm')}"></td>
+                        <td class="py-3 px-4" th:text="${#temporals.format(flight.arrival, 'MMM-dd, HH:mm')}"></td>
+                        <td class="py-3 px-4" th:text="|${flight.price} USD|"></td>
+                        <td class="py-3 px-4">
+                            <!-- Link to booking page (functionality to be added) -->
+                           <form th:action="@{/book/{id}(id=${flight.flightId})}" method="post">
+                                    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
+                                            th:disabled="${flight.seatsAvailable == 0}">
+                                        Book Now
+                                    </button>
+                                </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

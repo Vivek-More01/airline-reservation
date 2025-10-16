@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Booking Confirmation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+<!-- Include the header fragment -->
+<div th:replace="~{header :: navbar}"></div>
+
+<div class="container mx-auto mt-10 p-4">
+    <div th:if="${bookingDetails}" class="bg-white p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-green-600">Booking Confirmed!</h1>
+            <p class="text-gray-600">Your e-ticket has been generated.</p>
+        </div>
+
+        <div class="border-t border-b border-gray-200 py-4">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <p class="text-sm text-gray-500">Passenger Name</p>
+                    <p class="font-bold text-lg" th:text="${bookingDetails.user.name}"></p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">PNR</p>
+                    <p class="font-bold text-lg text-red-500" th:text="${bookingDetails.pnr}"></p>
+                </div>
+            </div>
+
+            <div class="flex items-center my-6">
+                <div class="text-center">
+                    <p class="font-bold text-xl" th:text="${bookingDetails.flight.source}"></p>
+                    <p class="text-sm text-gray-500" th:text="${#temporals.format(bookingDetails.flight.departure, 'MMM-dd, HH:mm')}"></p>
+                </div>
+                <div class="flex-grow text-center px-4">
+                    <span class="text-gray-400">✈️</span>
+                    <hr class="border-gray-300 border-dashed">
+                </div>
+                <div class="text-center">
+                    <p class="font-bold text-xl" th:text="${bookingDetails.flight.destination}"></p>
+                    <p class="text-sm text-gray-500" th:text="${#temporals.format(bookingDetails.flight.arrival, 'MMM-dd, HH:mm')}"></p>
+                </div>
+            </div>
+
+            <div class="text-sm text-gray-600">
+                <p><span class="font-semibold">Airline:</span> <span th:text="${bookingDetails.flight.airline}"></span></p>
+                <p><span class="font-semibold">Booking Date:</span> <span th:text="${#temporals.format(bookingDetails.bookingDate, 'yyyy-MM-dd HH:mm')}"></span></p>
+            </div>
+        </div>
+
+        <div class="text-center mt-6">
+            <a th:href="@{/}" class="text-blue-500 hover:underline">Back to Home</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

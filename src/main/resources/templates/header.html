@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Header</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+<!-- Reusable Navigation Bar Fragment -->
+<nav th:fragment="navbar" class="bg-gray-800 text-white p-4 shadow-md">
+    <div class="container mx-auto flex justify-between items-center">
+        <a th:href="@{/}" class="text-xl font-bold">Airline Reservation</a>
+        <div class="space-x-4">
+            <!-- Show these links only if the user is NOT logged in -->
+            <a th:if="${session.user == null}" th:href="@{/login}" class="hover:text-gray-300">Login</a>
+            <a th:if="${session.user == null}" th:href="@{/register}" class="hover:text-gray-300">Register</a>
+
+            <!-- Show these links only if the user IS logged in -->
+            <span th:if="${session.user != null}" th:text="|Welcome, ${session.user.name}|" class="font-semibold"></span>
+            <a th:if="${session.user != null}" th:href="@{/logout}" class="hover:text-gray-300">Logout</a>
+        </div>
+    </div>
+</nav>
+
+</body>
+</html>
