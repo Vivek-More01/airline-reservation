@@ -4,7 +4,7 @@ import com.airline.airline_reservation_springboot.dto.BookingRequest;
 import com.airline.airline_reservation_springboot.dto.FlightDetailsDTO;
 import com.airline.airline_reservation_springboot.dto.UserDTO;
 import com.airline.airline_reservation_springboot.model.Booking;
-import com.airline.airline_reservation_springboot.model.Flight;
+// import com.airline.airline_reservation_springboot.model.Flight;
 import com.airline.airline_reservation_springboot.model.User;
 import com.airline.airline_reservation_springboot.service.BookingService;
 import com.airline.airline_reservation_springboot.service.FlightService;
@@ -16,9 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
-import java.util.Map;
-import java.util.Optional;
+// import java.security.Principal;
+// import java.util.Map;
+// import java.util.Optional;
 
 @RestController
 @RequestMapping("/api") // All endpoints in this controller will start with /api

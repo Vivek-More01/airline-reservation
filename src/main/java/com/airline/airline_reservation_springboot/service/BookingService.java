@@ -6,6 +6,8 @@ import com.airline.airline_reservation_springboot.model.Flight;
 import com.airline.airline_reservation_springboot.model.User;
 import com.airline.airline_reservation_springboot.repository.BookingRepository;
 import com.airline.airline_reservation_springboot.repository.FlightRepository;
+// import com.airline.airline_reservation_springboot.repository.UserRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final FlightRepository flightRepository;
 
+
     public BookingService(BookingRepository bookingRepository, FlightRepository flightRepository) {
         this.bookingRepository = bookingRepository;
         this.flightRepository = flightRepository;
@@ -30,6 +33,9 @@ public class BookingService {
         Flight flight = flightRepository.findById(flightId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid flight ID: " + flightId));
 
+        // User user = userRepository.findById(userId)
+        //         .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + userId));
+
         // 2. Check if there are any seats available at all.
         if (flight.getSeatsAvailable() <= 0) {
             throw new IllegalStateException("No seats available on this flight.");
@@ -37,7 +43,7 @@ public class BookingService {
 
         // 3. Check if the specific seat is already booked.
         boolean isSeatTaken = flight.getBookings().stream()
-                .anyMatch(booking -> seatNumber.equalsIgnoreCase(booking.getSeat()));
+                .anyMatch(booking -> seatNumber.equalsIgnoreCase(booking.getSeat()) && booking.getStatus().equals("CONFIRMED"));
 
         if (isSeatTaken) {
             throw new IllegalStateException("Seat " + seatNumber + " is already taken.");
