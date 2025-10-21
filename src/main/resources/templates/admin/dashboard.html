@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-gray-100">
+    <div th:replace="~{header :: navbar}"></div>
+    <main class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Flight Management</h1>
+            <a th:href="@{/admin/flights/add}" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+                + Add New Flight
+            </a>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">ID</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Airline</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Route</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Departure</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Seats (Avail/Total)</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700">
+                        <tr th:if="${flights.isEmpty()}">
+                            <td colspan="6" class="text-center py-10 text-gray-500">No flights found. Please add a new flight to begin.</td>
+                        </tr>
+                        <tr th:each="flight : ${flights}" class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-4 px-4 font-bold" th:text="${flight.flightId}">1</td>
+                            <td class="py-4 px-4" th:text="${flight.airline}">Emirates</td>
+                            <td class="py-4 px-4">
+                                <span th:text="${flight.source}">DXB</span> &rarr; <span th:text="${flight.destination}">LHR</span>
+                            </td>
+                            <td class="py-4 px-4" th:text="${#temporals.format(flight.departure, 'dd MMM yyyy, HH:mm')}">22 Oct 2025, 10:00</td>
+                            <td class="py-4 px-4">
+                                <span th:text="${flight.seatsAvailable}">150</span> / <span th:text="${flight.seatsTotal}">200</span>
+                            </td>
+                            <td class="py-4 px-4 font-semibold" th:text="'$' + ${#numbers.formatDecimal(flight.price, 1, 2)}">$650.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+

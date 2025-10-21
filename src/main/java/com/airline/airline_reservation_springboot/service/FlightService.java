@@ -52,5 +52,13 @@ public class FlightService {
         // Return null if the flight was not found
         return null;
     }
+
+    public List<Flight> findAllFlights() {
+        return flightRepository.findAll();
+    }
+
+    public Flight saveFlight(Flight flight) {
+        return flightRepository.save(flight);
+    }
 }
 

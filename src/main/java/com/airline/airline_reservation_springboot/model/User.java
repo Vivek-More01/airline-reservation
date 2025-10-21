@@ -29,8 +29,8 @@ public class User {
     @JsonManagedReference // Tells Jackson this is the "forward" part of the relationship
     private List<Booking> bookings;
 
-    @Column(name = "password_hash")
-    private String passwordHash;
+    // @Column(name = "password_hash")
+    // private String passwordHash;
 
 
     // Getters and Setters
@@ -64,8 +64,12 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
-        this.passwordHash = generateHash(this.password);
     }
+
+    // public void setPasswordHash(String passwordHash) {
+    //     this.passwordHash = passwordHash;
+    // }
+
 
     public String getRole() {
         return role;
@@ -103,7 +107,7 @@ public class User {
         }
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
-    }
+    // public String getPasswordHash() {
+    //     return passwordHash;
+    // }
 }
