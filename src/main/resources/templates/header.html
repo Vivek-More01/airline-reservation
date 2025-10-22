@@ -20,7 +20,8 @@
             <!-- Show these links only if the user IS logged in -->
             <span th:if="${session.user != null}" th:text="|Welcome, ${session.user.name}|" class="font-semibold"></span>
             <a th:if="${session.user != null}" th:href="@{/logout}" class="hover:text-gray-300">Logout</a>
-            <a th:if="${session.user != null and session.user.role == 'Admin'}" th:href="@{/admin/dashboard}" class="text-gray-800 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Admin Dashboard</a>
+            <a th:if="${session.user != null and session.user.role == 'Admin'}" th:href="@{/admin/dashboard}" class="text-gray-300 hover:text-gray-600 px-3 py-2 rounded-md text-sm font-medium">Admin Dashboard</a>
+            <a th:if="${session.user != null and session.user.role == 'Staff'}" th:href="@{/staff/dashboard}" class="text-gray-300 hover:text-gray-600 px-3 py-2 rounded-md text-sm font-medium">Staff Dashboard</a>
         </div>
     </div>
 </nav>

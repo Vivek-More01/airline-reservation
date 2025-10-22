@@ -1,10 +1,14 @@
 package com.airline.airline_reservation_springboot.service;
 
 import com.airline.airline_reservation_springboot.dto.FlightDetailsDTO;
+import com.airline.airline_reservation_springboot.dto.FlightManifestDTO;
+import com.airline.airline_reservation_springboot.dto.FlightSummaryDTO;
+import com.airline.airline_reservation_springboot.dto.PassengerInfoDTO;
 import com.airline.airline_reservation_springboot.model.Booking;
 import com.airline.airline_reservation_springboot.model.Flight;
 import com.airline.airline_reservation_springboot.repository.FlightRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -59,6 +63,52 @@ public class FlightService {
 
     public Flight saveFlight(Flight flight) {
         return flightRepository.save(flight);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<FlightManifestDTO> getFlightManifestDetails(Integer flightId) {
+        Optional<Flight> flightOpt = flightRepository.findById(flightId);
+
+        if (flightOpt.isPresent()) {
+            Flight flight = flightOpt.get();
+            List<PassengerInfoDTO> passengers = flight.getBookings().stream()
+                .map(booking -> new PassengerInfoDTO(
+                    booking.getUser().getName(),
+                    booking.getUser().getEmail(),
+                    booking.getSeat(),
+                    booking.getPnr()
+                ))
+                .collect(Collectors.toList());
+
+            FlightManifestDTO manifestDTO = new FlightManifestDTO(
+                flight.getAirline(),
+                flight.getSource(),
+                flight.getDestination(),
+                passengers
+            );
+            return Optional.of(manifestDTO);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Fetches all flights and converts them into a list of summaries (DTOs).
+     * This avoids potential lazy loading issues in the view.
+     */
+    public List<FlightSummaryDTO> getAllFlightSummaries() {
+        // System.out.println("Fetching all flight summaries from FlightService."+ flightRepository.findAll().stream()
+           // .collect(Collectors.toList()));
+        return flightRepository.findAll().stream()
+            .map(flight -> new FlightSummaryDTO(
+                flight.getFlightId(),
+                flight.getAirline(),
+                flight.getSource(),
+                flight.getDestination(),
+                flight.getDeparture(),
+                flight.getSeatsAvailable(),
+                flight.getSeatsTotal()
+            ))
+            .collect(Collectors.toList());
     }
 }
 

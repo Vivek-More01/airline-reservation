@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" viewport="width=device-width, initial-scale=1">
+    <title>Passenger Manifest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-gray-100">
+    <div th:replace="~{header :: navbar}"></div>
+    <main class="container mx-auto px-4 py-8">
+        <a th:href="@{/staff/dashboard}" class="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">&larr; Back to Dashboard</a>
+
+        <!-- *** CORRECTED: Check if the 'manifest' object exists *** -->
+        <div th:if="${manifest != null}">
+            <!-- *** CORRECTED: Use fields from the 'manifest' DTO *** -->
+            <h1 class="text-3xl font-bold text-gray-800" th:text="${manifest.airline} + ' - Passenger Manifest'">Flight Manifest</h1>
+            <p class="text-xl text-gray-600 mb-6" th:text="${manifest.source} + ' to ' + ${manifest.destination}">Route Details</p>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <!-- *** CORRECTED: Check if the passenger list in 'manifest' is empty *** -->
+                <div th:if="${manifest.isPassengerListEmpty()}" class="text-center py-10">
+                    <p class="text-lg text-gray-500">No passengers have booked this flight yet.</p>
+                </div>
+                <!-- *** CORRECTED: Iterate over the passenger list from 'manifest' *** -->
+                <table th:if="${!manifest.isPassengerListEmpty()}" class="min-w-full bg-white">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Passenger Name</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Seat No.</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">PNR</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700">
+                        <!-- *** CORRECTED: Use fields from the PassengerInfoDTO within 'manifest.passengers' *** -->
+                        <tr th:each="passenger : ${manifest.passengers}" class="border-b border-gray-200">
+                            <td class="py-4 px-4 font-semibold" th:text="${passenger.name}">John Doe</td>
+                            <td class="py-4 px-4" th:text="${passenger.email}">john.doe@example.com</td>
+                            <td class="py-4 px-4 font-bold" th:text="${passenger.seatNo}">14A</td>
+                            <td class="py-4 px-4 font-mono text-indigo-600" th:text="${passenger.pnr}">EKXYZ123</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Handle case where flight wasn't found ('manifest' object is null) -->
+        <div th:if="${manifest == null}" class="text-center py-10">
+             <h1 class="text-3xl font-bold text-red-600">Flight Not Found</h1>
+             <p class="text-lg text-gray-600 mt-2">The requested flight does not exist.</p>
+        </div>
+    </main>
+</body>
+</html>
+

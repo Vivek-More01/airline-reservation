@@ -71,8 +71,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/**").authenticated()
                         // Restrict access to admin pages to users with the 'Admin' role
                         .requestMatchers("/admin/**").hasRole("Admin")
-                        // Restrict access to staff pages to users with 'Admin' or 'AirlineStaff' roles
-                        .requestMatchers("/staff/**").hasAnyRole("Admin", "AirlineStaff")
+                        // Restrict access to staff pages to users with 'Admin' or 'Staff' roles
+                        .requestMatchers("/staff/**").hasAnyRole("Admin", "Staff")
                         // Any other request must be authenticated
                         .anyRequest().authenticated())
                 .formLogin(formLogin -> formLogin
