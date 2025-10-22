@@ -1,30 +1,104 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Header</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
 <body>
 
-<!-- Reusable Navigation Bar Fragment -->
-<nav th:fragment="navbar" class="bg-gray-800 text-white p-4 shadow-md">
-    <div class="container mx-auto flex justify-between items-center">
-        <a th:href="@{/}" class="text-xl font-bold">Airline Reservation</a>
-        <div class="space-x-5">
-            <!-- Admin-specific link -->
-            <!-- Show these links only if the user is NOT logged in -->
-            <a th:if="${session.user == null}" th:href="@{/login}" class="hover:text-gray-300">Login</a>
-            <a th:if="${session.user == null}" th:href="@{/register}" class="hover:text-gray-300">Register</a>
+    <!-- Header Fragment -->
+    <nav th:fragment="navbar" class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <!-- Logo/Brand -->
+                <div class="flex items-center">
+                    <a class="text-2xl font-bold text-gray-800 hover:text-gray-700 lg:text-3xl" th:href="@{/}">
+                        Airline<span class="text-indigo-600">Reserve</span>
+                    </a>
+                </div>
 
-            <!-- Show these links only if the user IS logged in -->
-            <span th:if="${session.user != null}" th:text="|Welcome, ${session.user.name}|" class="font-semibold"></span>
-            <a th:if="${session.user != null}" th:href="@{/logout}" class="hover:text-gray-300">Logout</a>
-            <a th:if="${session.user != null and session.user.role == 'Admin'}" th:href="@{/admin/dashboard}" class="text-gray-300 hover:text-gray-600 px-3 py-2 rounded-md text-sm font-medium">Admin Dashboard</a>
-            <a th:if="${session.user != null and session.user.role == 'Staff'}" th:href="@{/staff/dashboard}" class="text-gray-300 hover:text-gray-600 px-3 py-2 rounded-md text-sm font-medium">Staff Dashboard</a>
+                <!-- Main Navigation Tabs -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <!-- REMOVED active highlighting -->
+                    <a th:href="@{/}" class="py-2 px-3 text-gray-700 hover:text-indigo-600 rounded text-sm font-medium">
+                       Search Flights
+                    </a>
+                    <a href="#" class="py-2 px-3 text-gray-700 hover:text-indigo-600 rounded text-sm font-medium">
+                        Popular Destinations
+                    </a>
+                    <a href="#" class="py-2 px-3 text-gray-700 hover:text-indigo-600 rounded text-sm font-medium">
+                        Offers
+                    </a>
+
+                    <!-- Admin specific tab -->
+                    <!-- REMOVED active highlighting -->
+                    <a th:if="${session.user != null and session.user.role == 'Admin'}"
+                       th:href="@{/admin/dashboard}"
+                       class="py-2 px-3 text-gray-700 hover:text-indigo-600 rounded text-sm font-medium">
+                       Admin Panel
+                    </a>
+
+                    <!-- Staff specific tab -->
+                    <!-- REMOVED active highlighting -->
+                     <a th:if="${session.user != null and (session.user.role == 'Staff' or session.user.role == 'Admin')}"
+                       th:href="@{/staff/dashboard}"
+                       class="py-2 px-3 text-gray-700 hover:text-indigo-600 rounded text-sm font-medium">
+                       Staff Panel
+                    </a>
+                </div>
+
+                <!-- Profile Dropdown / Login -->
+                <div class="flex items-center">
+                    <!-- Profile Dropdown (Logged In) -->
+                    <div th:if="${session.user != null}" class="relative">
+                        <button onclick="toggleDropdown()" class="flex items-center focus:outline-none">
+                            <img class="h-8 w-8 rounded-full object-cover mr-2 border-2 border-indigo-500"
+                                 th:src="@{'https://placehold.co/32x32/E9E9E9/858585?text=' + ${#strings.substring(session.user.name, 0, 1)}}"
+                                 alt="User Avatar">
+                            <span class="hidden md:inline text-sm font-medium text-gray-700" th:text="${session.user.name}">User Name</span>
+                             <svg class="ml-1 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <!-- Dropdown Menu -->
+                        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl z-20 py-1">
+                            <div class="px-4 py-2 text-sm text-gray-700">
+                                Welcome, <strong th:text="${session.user.name}">User</strong>!
+                            </div>
+                            <!--<a th:if="${session.user!= null and session.user.role == 'Admin' or session.user.role == 'Staff'}" th:href="@{/}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-500 hover:text-white">Staff Dashboard</a>
+                            <a th:if="${session.user!= null and session.user.role == 'Admin'}" th:href="@{/}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-500 hover:text-white">Admin Dashboard</a>-->
+                            <a th:href="@{/my-bookings}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-500 hover:text-white">My Bookings</a>
+                            <a th:href="@{/account-settings}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-500 hover:text-white">Account Settings</a>
+                            <hr class="my-1 border-gray-200">
+                            <a th:href="@{/logout}" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-500 hover:text-white">
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Login/Register Buttons (Logged Out) -->
+                    <div th:if="${session.user == null}" class="flex items-center space-x-2">
+                        <a th:href="@{/login}" class="text-gray-800 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a th:href="@{/register}" class="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">Register</a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</nav>
+
+        <!-- Simple JavaScript for Dropdown Toggle -->
+        <script th:inline="javascript">
+            function toggleDropdown() {
+                var dropdown = document.getElementById('profileDropdown');
+                dropdown.classList.toggle('hidden');
+            }
+            // Optional: Close dropdown if clicking outside
+            document.addEventListener('click', function(event) {
+                var dropdown = document.getElementById('profileDropdown');
+                var button = dropdown ? dropdown.previousElementSibling : null;
+                // Check if dropdown and button exist before trying to access properties
+                if (dropdown && !dropdown.classList.contains('hidden') && button && !button.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        </script>
+    </nav>
 
 </body>
 </html>
+

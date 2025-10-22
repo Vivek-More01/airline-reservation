@@ -1,6 +1,7 @@
 package com.airline.airline_reservation_springboot.service;
 
 import com.airline.airline_reservation_springboot.dto.BookingConfirmationDTO;
+import com.airline.airline_reservation_springboot.dto.BookingSummaryDTO;
 import com.airline.airline_reservation_springboot.model.Booking;
 import com.airline.airline_reservation_springboot.model.Flight;
 import com.airline.airline_reservation_springboot.model.User;
@@ -12,8 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
@@ -94,6 +97,56 @@ public class BookingService {
             return Optional.of(dto);
         }
         return Optional.empty();
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingSummaryDTO> findBookingsByUser(User user) {
+        List<Booking> bookings = bookingRepository.findByUserOrderByBookingDateDesc(user); // Assumes you add this method to BookingRepository
+        return bookings.stream()
+                .map(booking -> new BookingSummaryDTO(
+                        booking.getBookingId(),
+                        booking.getFlight().getAirline(),
+                        booking.getFlight().getSource(),
+                        booking.getFlight().getDestination(),
+                        booking.getFlight().getDeparture(),
+                        booking.getSeat(),
+                        booking.getStatus(),
+                        booking.getPnr()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Cancels a booking if it belongs to the specified user and is cancellable.
+     * @return true if cancellation was successful, false otherwise.
+     */
+    @Transactional
+    public boolean cancelBooking(Integer bookingId, User user) {
+        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            // Security check: Ensure the booking belongs to the current user
+            if (booking.getUser().getUserId() != user.getUserId()) {
+                return false; // Or throw an AccessDeniedException
+            }
+
+            // Check if booking is already cancelled or in a non-cancellable state
+            if (!"CONFIRMED".equalsIgnoreCase(booking.getStatus())) {
+                 return false; // Cannot cancel
+            }
+
+            // Perform cancellation logic
+            booking.setStatus("CANCELLED");
+            bookingRepository.save(booking);
+
+            // Increment available seats on the flight
+            Flight flight = booking.getFlight();
+            flight.setSeatsAvailable(flight.getSeatsAvailable() + 1);
+            flightRepository.save(flight);
+
+            return true;
+        }
+        return false; // Booking not found
     }
 
     private String generatePnr() {

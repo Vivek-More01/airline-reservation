@@ -6,13 +6,17 @@ package com.airline.airline_reservation_springboot.dto;
  */
 public class UserDTO {
 
-    private int userId;
+    private Integer userId;
     private String name;
     private String email;
     private String role;
 
-    // A constructor to easily map from the User entity
-    public UserDTO(int userId, String name, String email, String role) {
+    // Default constructor (often needed for data binding)
+    public UserDTO() {
+    }
+
+    // Constructor to easily map from the User entity
+    public UserDTO(Integer userId, String name, String email, String role) {
         this.userId = userId;
         this.name = name;
         this.email = email;
@@ -20,8 +24,13 @@ public class UserDTO {
     }
 
     // Standard Getters and Setters
-    public int getUserId() {
+    // --- CHANGE: Getter/Setter use Integer ---
+    public Integer getUserId() {
         return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
 
     public void setUserId(int userId) {

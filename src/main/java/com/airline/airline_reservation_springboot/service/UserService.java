@@ -86,7 +86,17 @@ public class UserService {
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
-
+    
+    // --- NEW METHOD ---
+    /**
+     * Saves changes to a user entity. Use this for profile updates.
+     * Assumes password hashing is handled elsewhere if needed (like in
+     * changePassword).
+     */
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+    
     public UserDTO convertToDTO(User user) {
         return new UserDTO(user.getUserId(), user.getName(), user.getEmail(), user.getRole());
     }

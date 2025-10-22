@@ -44,10 +44,10 @@ public class FlightService {
             // Get the list of all bookings for this flight
             List<Booking> bookings = flight.getBookings();
 
-            // Extract just the seat numbers from the list of bookings
             List<String> bookedSeats = bookings.stream()
-                                            .map(Booking::getSeat)
-                                            .collect(Collectors.toList());
+                    .filter(booking -> "CONFIRMED".equalsIgnoreCase(booking.getStatus())) // Only consider active bookings
+                    .map(Booking::getSeat)
+                    .collect(Collectors.toList());
 
             // Create and return the new DTO
             return new FlightDetailsDTO(flight, bookedSeats);
