@@ -6,11 +6,14 @@ import com.airline.airline_reservation_springboot.dto.FlightSummaryDTO;
 import com.airline.airline_reservation_springboot.dto.PassengerInfoDTO;
 import com.airline.airline_reservation_springboot.model.Booking;
 import com.airline.airline_reservation_springboot.model.Flight;
+import com.airline.airline_reservation_springboot.repository.BookingRepository;
 import com.airline.airline_reservation_springboot.repository.FlightRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional; // <-- This import is required
 import java.util.stream.Collectors;
@@ -19,13 +22,17 @@ import java.util.stream.Collectors;
 public class FlightService {
 
     private final FlightRepository flightRepository;
+    private final BookingRepository bookingRepository;
 
-    public FlightService(FlightRepository flightRepository) {
+    public FlightService(FlightRepository flightRepository, BookingRepository bookingRepository) {
         this.flightRepository = flightRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     public List<Flight> searchFlights(String source, String destination, LocalDate departureDate) {
-        return flightRepository.findBySourceAndDestinationAndDepartureDate(source, destination, departureDate);
+        return flightRepository.findBySourceAndDestinationAndDepartureDate(source, destination, departureDate).stream()
+                .filter(flight -> !"Cancelled".equalsIgnoreCase(flight.getStatus()))
+                .collect(Collectors.toList());
     }
 
     public Optional<Flight> findById(int flightId) {
@@ -36,7 +43,8 @@ public class FlightService {
 
     public FlightDetailsDTO getFlightDetails(int flightId) {
         // Find the flight by its ID
-        Optional<Flight> flightOpt = flightRepository.findById(flightId);
+        Optional<Flight> flightOpt = flightRepository.findById(flightId)
+                .filter(flight -> !"Cancelled".equalsIgnoreCase(flight.getStatus()));;
 
         if (flightOpt.isPresent()) {
             Flight flight = flightOpt.get();
@@ -106,9 +114,70 @@ public class FlightService {
                 flight.getDestination(),
                 flight.getDeparture(),
                 flight.getSeatsAvailable(),
-                flight.getSeatsTotal()
+                flight.getSeatsTotal(),
+                flight.getStatus()
             ))
             .collect(Collectors.toList());
+    }
+
+    // --- METHODS FOR FLIGHT STATUS MANAGEMENT ---
+
+    /**
+     * Cancels a flight and updates associated bookings.
+     * @param flightId The ID of the flight to cancel.
+     * @return true if successful, false if flight not found.
+     */
+    @Transactional
+    public boolean cancelFlight(Integer flightId) {
+        Optional<Flight> flightOpt = flightRepository.findById(flightId);
+        if (flightOpt.isPresent()) {
+            Flight flight = flightOpt.get();
+            if ("Cancelled".equalsIgnoreCase(flight.getStatus())) {
+                return true; // Already cancelled
+            }
+            flight.setStatus("Cancelled");
+            flight.setSeatsAvailable(0); // No more seats available
+            flightRepository.save(flight);
+
+            // Cancel all associated confirmed bookings
+            List<Booking> bookingsToCancel = flight.getBookings().stream()
+                    .filter(b -> "CONFIRMED".equalsIgnoreCase(b.getStatus()))
+                    .collect(Collectors.toList());
+
+            for (Booking booking : bookingsToCancel) {
+                booking.setStatus("CANCELLED");
+            }
+            bookingRepository.saveAll(bookingsToCancel);
+            // In a real system, you would trigger notifications here
+
+            return true;
+        }
+        return false; // Flight not found
+    }
+
+     /**
+     * Delays a flight by updating its departure and arrival times.
+     * @param flightId The ID of the flight to delay.
+     * @param newDeparture The new departure time.
+     * @param newArrival The new arrival time.
+     * @return true if successful, false if flight not found or already cancelled.
+     */
+    @Transactional
+    public boolean delayFlight(Integer flightId, LocalDateTime newDeparture, LocalDateTime newArrival) {
+        Optional<Flight> flightOpt = flightRepository.findById(flightId);
+        if (flightOpt.isPresent()) {
+            Flight flight = flightOpt.get();
+             if ("Cancelled".equalsIgnoreCase(flight.getStatus())) {
+                return false; // Cannot delay a cancelled flight
+            }
+            flight.setDeparture(newDeparture);
+            flight.setArrival(newArrival);
+            flight.setStatus("Delayed");
+            flightRepository.save(flight);
+            // In a real system, you would trigger notifications here
+            return true;
+        }
+        return false; // Flight not found
     }
 }
 

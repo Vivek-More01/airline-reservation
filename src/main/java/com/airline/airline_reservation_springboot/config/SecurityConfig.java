@@ -1,5 +1,6 @@
 package com.airline.airline_reservation_springboot.config;
 
+import com.airline.airline_reservation_springboot.model.User;
 import com.airline.airline_reservation_springboot.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,13 +34,24 @@ public class SecurityConfig {
     // Bean for providing user details from the database
     @Bean
     public UserDetailsService userDetailsService() {
-        return email -> userService.findByEmail(email)
-                .map(user -> org.springframework.security.core.userdetails.User.builder()
-                        .username(user.getEmail())
-                        .password(user.getPassword())
-                        .roles(user.getRole())
-                        .build())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+            return email -> {
+                    User user = userService.findByEmail(email)
+                                    .orElseThrow(() -> new UsernameNotFoundException(
+                                                    "User not found with email: " + email));
+
+                    // --- THIS IS THE CRUCIAL CHANGE ---
+                    // Check if the user account is active before allowing login
+                    boolean accountNonLocked = user.isActive(); // Use helper method from User entity
+
+                    return org.springframework.security.core.userdetails.User.builder()
+                                    .username(user.getEmail())
+                                    .password(user.getPassword())
+                                    .roles(user.getRole())
+                                    .accountLocked(!accountNonLocked) // Lock account if not active
+                                    // .disabled(!accountNonLocked) // Another option
+                                    .build();
+            };
+
     }
 
     // Bean for the authentication provider that uses our user details service and

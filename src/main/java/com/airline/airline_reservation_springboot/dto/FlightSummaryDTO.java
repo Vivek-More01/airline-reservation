@@ -14,10 +14,12 @@ public class FlightSummaryDTO {
     private LocalDateTime departure;
     private int seatsAvailable;
     private int seatsTotal;
+    private String status;
+
 
     // Constructor to map from the Flight entity
     public FlightSummaryDTO(int flightId, String airline, String source, String destination, LocalDateTime departure,
-            int seatsAvailable, int seatsTotal) {
+            int seatsAvailable, int seatsTotal, String status) {
         this.flightId = flightId;
         this.airline = airline;
         this.source = source;
@@ -25,6 +27,11 @@ public class FlightSummaryDTO {
         this.departure = departure;
         this.seatsAvailable = seatsAvailable;
         this.seatsTotal = seatsTotal;
+        this.status = status;
+    }
+
+    public String getStatus() {
+        return status;
     }
 
     // Getters

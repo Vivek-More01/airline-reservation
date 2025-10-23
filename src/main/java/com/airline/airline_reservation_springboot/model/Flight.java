@@ -16,11 +16,24 @@ public class Flight {
     @Column(name = "flight_id")
     private int flightId;
 
+    @Column(name = "airline")
+
     private String airline;
+
+    @Column(name = "source")
     private String source;
+
+    @Column(name = "destination")
     private String destination;
+
+    @Column(name = "departure")
     private LocalDateTime departure;
+
+    @Column(name = "arrival")
     private LocalDateTime arrival;
+    
+    @Column(name = "status")
+    private String status;
 
     @Column(name = "seats_total")
     private int seatsTotal;
@@ -116,5 +129,12 @@ public class Flight {
 
     public void setBookings(List<Booking> bookings) {
         this.bookings = bookings;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

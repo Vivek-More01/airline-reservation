@@ -2,8 +2,8 @@ package com.airline.airline_reservation_springboot.model;
 
 import jakarta.persistence.*;
 import java.util.List;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+// import java.security.MessageDigest;
+// import java.security.NoSuchAlgorithmException;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
@@ -22,7 +22,10 @@ public class User {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "role")
     private String role;
+    @Column(name = "account_status")
+    private String accountStatus;
 
     // THIS IS THE CRUCIAL CHANGE
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -86,26 +89,39 @@ public class User {
     public void setBookings(List<Booking> bookings) {
         this.bookings = bookings;
     }
-     public static String generateHash(String input) {
-        try {
-            // Create MessageDigest instance for SHA-256
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
 
-            // Compute the hash bytes
-            byte[] hashBytes = md.digest(input.getBytes());
-
-            // Convert byte array into a readable hex string
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hashBytes) {
-                sb.append(String.format("%02x", b));
-            }
-
-            return sb.toString();
-
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
+    public boolean isActive() {
+        return "active".equalsIgnoreCase(accountStatus);
     }
+
+    public void setAccountStatus(String accountStatus) {
+        this.accountStatus = accountStatus;
+    }
+
+    public String getAccountStatus() {
+        return accountStatus;
+    }
+
+    //  public static String generateHash(String input) {
+    //     try {
+    //         // Create MessageDigest instance for SHA-256
+    //         MessageDigest md = MessageDigest.getInstance("SHA-256");
+
+    //         // Compute the hash bytes
+    //         byte[] hashBytes = md.digest(input.getBytes());
+
+    //         // Convert byte array into a readable hex string
+    //         StringBuilder sb = new StringBuilder();
+    //         for (byte b : hashBytes) {
+    //             sb.append(String.format("%02x", b));
+    //         }
+
+    //         return sb.toString();
+
+    //     } catch (NoSuchAlgorithmException e) {
+    //         throw new RuntimeException(e);
+    //     }
+    // }
 
     // public String getPasswordHash() {
     //     return passwordHash;

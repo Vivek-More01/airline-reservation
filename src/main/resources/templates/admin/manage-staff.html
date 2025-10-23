@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Staff</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-gray-100">
+    <div th:replace="~{header :: navbar}"></div>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Messages -->
+         <div th:if="${successMessage}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline" th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline" th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Manage Airline Staff</h1>
+            <a th:href="@{/admin/staff/add}" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+                + Add New Staff
+            </a>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+             <div th:if="${staffMembers.isEmpty()}" class="text-center py-10">
+                <p class="text-xl text-gray-600">No staff members found.</p>
+            </div>
+            <div th:if="${!staffMembers.isEmpty()}" class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">User ID</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Name</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700">
+                        <tr th:each="staff : ${staffMembers}" class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-4 px-4 font-medium" th:text="${staff.userId}">1</td>
+                            <td class="py-4 px-4" th:text="${staff.name}">Staff Name</td>
+                            <td class="py-4 px-4" th:text="${staff.email}">staff@example.com</td>
+                             <td class="py-4 px-4">
+                               <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                                     th:text="${staff.accountStatus}"
+                                     th:classappend="${#strings.equalsIgnoreCase(staff.accountStatus, 'ACTIVE')} ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                               ACTIVE</span>
+                            </td>
+                            <td class="py-4 px-4 text-sm">
+                                <!-- Remove Button Form (Soft Delete) -->
+                                <form th:if="${!#strings.equalsIgnoreCase(staff.accountStatus, 'INACTIVE')}"
+                                      th:action="@{/admin/staff/{id}/remove(id=${staff.userId})}" method="post" class="inline"
+                                      onsubmit="return confirm('Remove staff member ' + [[${staff.name}]] + '? This will set their status to INACTIVE.');">
+                                    <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Remove</button>
+                                </form>
+                                <span th:if="${#strings.equalsIgnoreCase(staff.accountStatus, 'INACTIVE')}" class="text-gray-500">Removed</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
