@@ -1,5 +1,7 @@
 package com.airline.airline_reservation_springboot.dto;
 
+import com.airline.airline_reservation_springboot.model.Booking; // Import Booking
+import java.math.BigDecimal; // Import BigDecimal
 import java.time.LocalDateTime;
 
 /**
@@ -7,24 +9,31 @@ import java.time.LocalDateTime;
  */
 public class BookingSummaryDTO {
     private int bookingId;
-    private String airline;
+    private String airlineName; // Changed from airline
     private String source;
     private String destination;
     private LocalDateTime departure;
     private String seatNo;
+    private String seatTypeName; // Added
+    private BigDecimal calculatedPrice; // Added
     private String status;
     private String pnr;
 
-    public BookingSummaryDTO(int bookingId, String airline, String source, String destination, LocalDateTime departure,
-            String seatNo, String status, String pnr) {
-        this.bookingId = bookingId;
-        this.airline = airline;
-        this.source = source;
-        this.destination = destination;
-        this.departure = departure;
-        this.seatNo = seatNo;
-        this.status = status;
-        this.pnr = pnr;
+    // Constructor updated to map from Booking entity
+    public BookingSummaryDTO(Booking booking) {
+        this.bookingId = booking.getBookingId();
+        // Safely get related data
+        this.airlineName = (booking.getFlight() != null && booking.getFlight().getAirline() != null)
+                ? booking.getFlight().getAirline().getAirlineName()
+                : "N/A";
+        this.source = (booking.getFlight() != null) ? booking.getFlight().getSource() : "N/A";
+        this.destination = (booking.getFlight() != null) ? booking.getFlight().getDestination() : "N/A";
+        this.departure = (booking.getFlight() != null) ? booking.getFlight().getDeparture() : null;
+        this.seatNo = booking.getSeatNo();
+        this.seatTypeName = (booking.getSeatType() != null) ? booking.getSeatType().getTypeName() : "N/A"; // Added
+        this.calculatedPrice = booking.getCalculatedPrice(); // Added
+        this.status = booking.getStatus();
+        this.pnr = booking.getPnr();
     }
 
     // Getters
@@ -32,9 +41,9 @@ public class BookingSummaryDTO {
         return bookingId;
     }
 
-    public String getAirline() {
-        return airline;
-    }
+    public String getAirlineName() {
+        return airlineName;
+    } // Changed
 
     public String getSource() {
         return source;
@@ -52,6 +61,14 @@ public class BookingSummaryDTO {
         return seatNo;
     }
 
+    public String getSeatTypeName() {
+        return seatTypeName;
+    } // Added
+
+    public BigDecimal getCalculatedPrice() {
+        return calculatedPrice;
+    } // Added
+
     public String getStatus() {
         return status;
     }
@@ -60,11 +77,13 @@ public class BookingSummaryDTO {
         return pnr;
     }
 
-    // Helper method for template logic
     public boolean isCancellable() {
-        // Define your cancellation logic here (e.g., only allow cancelling confirmed
-        // bookings)
-        // Also consider adding a time constraint (e.g., > 24 hours before departure)
+        // Keep existing logic or refine based on status/time
         return "CONFIRMED".equalsIgnoreCase(status);
+    }
+
+    // Formatted price for display
+    public String getFormattedCalculatedPrice() {
+        return (calculatedPrice != null) ? String.format("$%,.2f", calculatedPrice) : "$N/A";
     }
 }

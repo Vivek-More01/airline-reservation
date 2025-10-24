@@ -8,88 +8,80 @@ import java.util.List;
 public class FlightDetailsDTO {
 
     private int flightId;
-    private String airline;
+    private String airlineName; // Changed
+    private String aircraftModel; // Added
     private String source;
     private String destination;
     private LocalDateTime departure;
     private LocalDateTime arrival;
-    private BigDecimal price;
-    private List<String> bookedSeats;
+    private BigDecimal basePrice; // Changed
+    private int seatsTotal; // Added (from Aircraft)
+    private String seatLayoutJson; // Added
+    private List<String> bookedSeats; // (Confirmed/CheckedIn seats)
 
+    // Constructor updated to map from Flight entity
     public FlightDetailsDTO(Flight flight, List<String> bookedSeats) {
         this.flightId = flight.getFlightId();
-        this.airline = flight.getAirline();
+        // Safely get related data
+        this.airlineName = (flight.getAirline() != null) ? flight.getAirline().getAirlineName() : "N/A"; // Changed
+        this.aircraftModel = (flight.getAircraft() != null) ? flight.getAircraft().getAircraftModel() : "N/A"; // Added
         this.source = flight.getSource();
         this.destination = flight.getDestination();
         this.departure = flight.getDeparture();
         this.arrival = flight.getArrival();
-        this.price = flight.getPrice();
+        this.basePrice = flight.getBasePrice(); // Changed
+        this.seatsTotal = flight.getTotalSeats(); // Added (uses helper)
+        this.seatLayoutJson = (flight.getAircraft() != null) ? flight.getAircraft().getSeatLayoutJson() : null; // Added
         this.bookedSeats = bookedSeats;
     }
 
-    // --- Getters and Setters ---
-
+    // Getters
     public int getFlightId() {
         return flightId;
     }
 
-    public void setFlightId(int flightId) {
-        this.flightId = flightId;
-    }
+    public String getAirlineName() {
+        return airlineName;
+    } // Changed
 
-    public String getAirline() {
-        return airline;
-    }
-
-    public void setAirline(String airline) {
-        this.airline = airline;
-    }
+    public String getAircraftModel() {
+        return aircraftModel;
+    } // Added
 
     public String getSource() {
         return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
     }
 
     public String getDestination() {
         return destination;
     }
 
-    public void setDestination(String destination) {
-        this.destination = destination;
-    }
-
     public LocalDateTime getDeparture() {
         return departure;
-    }
-
-    public void setDeparture(LocalDateTime departure) {
-        this.departure = departure;
     }
 
     public LocalDateTime getArrival() {
         return arrival;
     }
 
-    public void setArrival(LocalDateTime arrival) {
-        this.arrival = arrival;
-    }
+    public BigDecimal getBasePrice() {
+        return basePrice;
+    } // Changed
 
-    public BigDecimal getPrice() {
-        return price;
-    }
+    public int getSeatsTotal() {
+        return seatsTotal;
+    } // Added
 
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
+    public String getSeatLayoutJson() {
+        return seatLayoutJson;
+    } // Added
 
     public List<String> getBookedSeats() {
         return bookedSeats;
     }
 
-    public void setBookedSeats(List<String> bookedSeats) {
-        this.bookedSeats = bookedSeats;
+    // Formatted price for display
+    public String getFormattedBasePrice() {
+        return (basePrice != null) ? String.format("$%,.2f", basePrice) : "$N/A";
     }
 }

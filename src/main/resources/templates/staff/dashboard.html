@@ -26,7 +26,7 @@
                     </thead>
                     <tbody class="text-gray-700">
                         <tr th:each="flight : ${flights}" class="border-b border-gray-200 hover:bg-gray-50">
-                            <td class="py-4 px-4 font-bold" th:text="${flight.airline}">Emirates</td>
+                            <td class="py-4 px-4 font-bold" th:text="${flight.airlineName}">Emirates</td>
                             <td class="py-4 px-4"><span th:text="${flight.source}">DXB</span> &rarr; <span th:text="${flight.destination}">LHR</span></td>
                             <td class="py-4 px-4" th:text="${#temporals.format(flight.departure, 'dd MMM, HH:mm')}">22 Oct, 10:00</td>
                             <td class="py-4 px-4" th:text="${flight.seatsTotal - flight.seatsAvailable} + ' / ' + ${flight.seatsTotal}">150 / 200</td>

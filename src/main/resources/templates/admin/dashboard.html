@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/custom.css}" /> <!-- Add custom CSS -->
     <style>
         body { font-family: 'Inter', sans-serif; }
         .delay-form-container { display: none; }
@@ -82,10 +83,11 @@
                         </tr>
                     </thead>
                     <tbody class="text-gray-700">
+                        <!-- Using FlightSummaryDTO -->
                         <th:block th:each="flight, iterStat : ${flights}">
                             <tr class="border-b border-gray-200 hover:bg-gray-50">
                                 <td class="py-4 px-4 font-bold" th:text="${flight.flightId}">1</td>
-                                <td class="py-4 px-4" th:text="${flight.airline}">Emirates</td>
+                                <td class="py-4 px-4" th:text="${flight.airlineName}">Emirates</td> <!-- Updated -->
                                 <td class="py-4 px-4"><span th:text="${flight.source}">DXB</span> &rarr; <span th:text="${flight.destination}">LHR</span></td>
                                 <td class="py-4 px-4" th:text="${#temporals.format(flight.departure, 'dd MMM, HH:mm')}">22 Oct, 10:00</td>
                                 <td class="py-4 px-4">
@@ -96,25 +98,23 @@
                                                         (${#strings.equalsIgnoreCase(flight.status, 'Cancelled')} ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'))">
                                    Scheduled</span>
                                 </td>
-                                <td class="py-4 px-4"><span th:text="${flight.seatsAvailable}">150</span> / <span th:text="${flight.seatsTotal}">200</span></td>
-                                <td class="py-4 px-4 font-semibold" th:text="'$' + ${#numbers.formatDecimal(flight.price, 1, 2)}">$650.00</td>
+                                <td class="py-4 px-4"><span th:text="${flight.seatsAvailable}">150</span> / <span th:text="${flight.seatsTotal}">200</span></td> <!-- Updated -->
+                                <td class="py-4 px-4 font-semibold" th:text="${flight.formattedBasePrice}">$650.00</td> <!-- Updated -->
                                 <td class="py-4 px-4 text-sm space-x-2">
-                                    <div th:if="${!#strings.equalsIgnoreCase(flight.status, 'Cancelled')}">
-                                        <!-- *** UPDATED: Cancel Button now triggers JS modal *** -->
+                                     <div th:if="${!#strings.equalsIgnoreCase(flight.status, 'Cancelled')}">
                                         <form th:action="@{/admin/flights/{id}/cancel(id=${flight.flightId})}" method="post" class="inline"
-                                              th:id="'cancel-form-' + ${flight.flightId}">
-                                            <button type="button" 
+                                              th:id="'cancel-form-' + ${flight.flightId}" th:attr="data-flight-id=${flight.flightId}"
+                                              onsubmit="return confirmCancel(this);">
+                                            <button type="button"
                                                     th:attr="onclick='showCancelConfirmation(\'' + ${flight.flightId} + '\', \'cancel-form-' + ${flight.flightId} + '\')'"
                                                     class="text-red-600 hover:text-red-800 font-medium">Cancel</button>
                                         </form>
-
-                                        <!-- Delay Button (Triggers JS) -->
                                         <button th:attr="onclick='toggleDelayForm(\'delay-form-' + ${flight.flightId} + '\')'" type="button" class="text-yellow-600 hover:text-yellow-800 font-medium ml-2">Delay</button>
                                     </div>
                                     <span th:if="${#strings.equalsIgnoreCase(flight.status, 'Cancelled')}" class="text-gray-500">N/A</span>
                                 </td>
                             </tr>
-                            <!-- Hidden Row/Div for Delay Form -->
+                            <!-- Hidden Delay Row (references flight DTO) -->
                             <tr th:id="'delay-form-' + ${flight.flightId}" class="delay-form-container bg-gray-50 border-b border-gray-200">
                                 <td colspan="8" class="px-4 py-3">
                                      <form th:action="@{/admin/flights/{id}/delay(id=${flight.flightId})}" method="post" class="flex items-center space-x-2">
@@ -122,7 +122,8 @@
                                         <input th:id="'newDeparture-' + ${flight.flightId}" type="datetime-local" name="newDeparture" th:value="${#temporals.format(flight.departure, 'yyyy-MM-dd''T''HH:mm')}" required class="text-xs p-1 border rounded">
 
                                         <label th:for="'newArrival-' + ${flight.flightId}" class="text-xs font-medium text-gray-600 ml-4">New Arrival:</label>
-                                        <input th:id="'newArrival-' + ${flight.flightId}" type="datetime-local" name="newArrival" th:value="${flight.arrival != null ? #temporals.format(flight.departure.plus(T(java.time.Duration).between(flight.departure, flight.arrival)), 'yyyy-MM-dd''T''HH:mm') : ''}" required class="text-xs p-1 border rounded">
+                                        <!-- Need arrival time on DTO or calculate based on original duration -->
+                                        <input th:id="'newArrival-' + ${flight.flightId}" type="datetime-local" name="newArrival" th:value="${#temporals.format(flight.arrival, 'yyyy-MM-dd''T''HH:mm')}" required class="text-xs p-1 border rounded">
 
                                         <button type="submit" class="bg-yellow-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-yellow-600 ml-4">Confirm Delay</button>
                                         <button type="button" th:attr="onclick='toggleDelayForm(\'delay-form-' + ${flight.flightId} + '\')'" class="text-gray-500 text-xs font-medium ml-2 hover:text-gray-700">Close</button>

@@ -1,6 +1,9 @@
 package com.airline.airline_reservation_springboot.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import com.airline.airline_reservation_springboot.model.Flight;
 
 /**
  * DTO representing a simplified summary of a flight for display in lists (like
@@ -8,30 +11,30 @@ import java.time.LocalDateTime;
  */
 public class FlightSummaryDTO {
     private int flightId;
-    private String airline;
+    private String airlineName; // Changed from airline
     private String source;
     private String destination;
     private LocalDateTime departure;
+    private LocalDateTime arrival;
     private int seatsAvailable;
-    private int seatsTotal;
+    private int seatsTotal; // Now comes from Aircraft
     private String status;
-
+    private BigDecimal basePrice; // Changed from price
 
     // Constructor to map from the Flight entity
-    public FlightSummaryDTO(int flightId, String airline, String source, String destination, LocalDateTime departure,
-            int seatsAvailable, int seatsTotal, String status) {
-        this.flightId = flightId;
-        this.airline = airline;
-        this.source = source;
-        this.destination = destination;
-        this.departure = departure;
-        this.seatsAvailable = seatsAvailable;
-        this.seatsTotal = seatsTotal;
-        this.status = status;
-    }
-
-    public String getStatus() {
-        return status;
+    public FlightSummaryDTO(Flight flight) {
+        this.flightId = flight.getFlightId();
+        // Safely get airline name
+        this.airlineName = (flight.getAirline() != null) ? flight.getAirline().getAirlineName() : "N/A";
+        this.source = flight.getSource();
+        this.destination = flight.getDestination();
+        this.departure = flight.getDeparture();
+        this.seatsAvailable = flight.getSeatsAvailable();
+        // Safely get total seats from aircraft
+        this.seatsTotal = flight.getTotalSeats(); // Use helper method
+        this.status = flight.getStatus();
+        this.basePrice = flight.getBasePrice();
+        this.arrival = flight.getArrival();
     }
 
     // Getters
@@ -39,9 +42,9 @@ public class FlightSummaryDTO {
         return flightId;
     }
 
-    public String getAirline() {
-        return airline;
-    }
+    public String getAirlineName() {
+        return airlineName;
+    } // Changed getter name
 
     public String getSource() {
         return source;
@@ -54,6 +57,9 @@ public class FlightSummaryDTO {
     public LocalDateTime getDeparture() {
         return departure;
     }
+    public LocalDateTime getArrival() {
+        return arrival;
+    }
 
     public int getSeatsAvailable() {
         return seatsAvailable;
@@ -63,8 +69,21 @@ public class FlightSummaryDTO {
         return seatsTotal;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public BigDecimal getBasePrice() {
+        return basePrice;
+    } // Changed getter name
+
     // Calculated property for occupancy
     public int getOccupancy() {
-        return seatsTotal - seatsAvailable;
+        return (seatsTotal > 0) ? seatsTotal - seatsAvailable : 0;
+    }
+
+    // Formatted price for display
+    public String getFormattedBasePrice() {
+        return (basePrice != null) ? String.format("$%,.2f", basePrice) : "$N/A";
     }
 }

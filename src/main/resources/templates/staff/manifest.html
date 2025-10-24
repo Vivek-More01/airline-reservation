@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <title>Passenger Manifest</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style> body { font-family: 'Inter', sans-serif; } </style>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Style to hide the seat change form initially */
+        .seat-change-form-container { display: none; }
+    </style>
 </head>
 <body class="bg-gray-100">
     <div th:replace="~{header :: navbar}"></div>
@@ -20,8 +24,18 @@
         </div>
 
         <div th:if="${manifest != null}">
-            <h1 class="text-3xl font-bold text-gray-800" th:text="${manifest.airline} + ' - Passenger Manifest'">Flight Manifest</h1>
-            <p class="text-xl text-gray-600 mb-6" th:text="${manifest.source} + ' to ' + ${manifest.destination}">Route Details</p>
+            <!-- *** UPDATED Header with Load Factor *** -->
+            <div class="flex justify-between items-baseline mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800" th:text="${manifest.airline} + ' - Passenger Manifest'">Flight Manifest</h1>
+                    <p class="text-xl text-gray-600" th:text="${manifest.source} + ' to ' + ${manifest.destination}">Route Details</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-sm font-semibold text-gray-500 uppercase">Load Factor</span>
+                    <p class="text-2xl font-bold text-indigo-600" th:text="${manifest.formattedLoadFactor}">75.0%</p>
+                </div>
+            </div>
+
 
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <div th:if="${manifest.isPassengerListEmpty()}" class="text-center py-10">
@@ -34,49 +48,67 @@
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Seat No.</th>
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">PNR</th>
-                            <!-- *** NEW: Status Column *** -->
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                            <!-- *** NEW: Actions Column *** -->
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="text-gray-700">
-                        <tr th:each="passenger : ${manifest.passengers}" class="border-b border-gray-200">
-                            <td class="py-4 px-4 font-semibold" th:text="${passenger.name}">John Doe</td>
-                            <td class="py-4 px-4" th:text="${passenger.email}">john.doe@example.com</td>
-                            <td class="py-4 px-4 font-bold" th:text="${passenger.seatNo}">14A</td>
-                            <td class="py-4 px-4 font-mono text-indigo-600" th:text="${passenger.pnr}">EKXYZ123</td>
-                            <!-- *** NEW: Display Status *** -->
-                            <td class="py-4 px-4">
-                                <span class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
-                                      th:text="${passenger.status}"
-                                      th:classappend="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED')} ? 'bg-blue-100 text-blue-800' :
-                                                     (${#strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')} ? 'bg-green-100 text-green-800' :
-                                                     (${#strings.equalsIgnoreCase(passenger.status, 'CANCELLED')} ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'))">
-                                CONFIRMED</span>
-                            </td>
-                             <!-- *** NEW: Action Buttons *** -->
-                             <td class="py-4 px-4 text-sm space-x-2">
-                                 <!-- Check-in Button (only if CONFIRMED) -->
-                                 <form th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED')}"
-                                       th:action="@{/staff/bookings/{id}/checkin(id=${passenger.bookingId})}" method="post" class="inline">
-                                     <!-- Need flightId to redirect back -->
-                                     <input type="hidden" name="flightId" th:value="${flightId}" />
-                                     <button type="submit" class="text-green-600 hover:text-green-800 font-medium">Check-In</button>
-                                 </form>
+                        <!-- Loop for each passenger row -->
+                        <th:block th:each="passenger : ${manifest.passengers}">
+                            <tr class="border-b border-gray-200">
+                                <td class="py-4 px-4 font-semibold" th:text="${passenger.name}">John Doe</td>
+                                <td class="py-4 px-4" th:text="${passenger.email}">john.doe@example.com</td>
+                                <td class="py-4 px-4 font-bold" th:text="${passenger.seatNo}">14A</td>
+                                <td class="py-4 px-4 font-mono text-indigo-600" th:text="${passenger.pnr}">EKXYZ123</td>
+                                <td class="py-4 px-4">
+                                    <span class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                                          th:text="${passenger.status}"
+                                          th:classappend="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED')} ? 'bg-blue-100 text-blue-800' :
+                                                         (${#strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')} ? 'bg-green-100 text-green-800' :
+                                                         (${#strings.equalsIgnoreCase(passenger.status, 'CANCELLED')} ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'))">
+                                    CONFIRMED</span>
+                                </td>
+                                 <td class="py-4 px-4 text-sm space-x-2 whitespace-nowrap"> <!-- Prevent wrapping -->
+                                     <!-- Check-in Button -->
+                                     <form th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED')}"
+                                           th:action="@{/staff/bookings/{id}/checkin(id=${passenger.bookingId})}" method="post" class="inline">
+                                         <input type="hidden" name="flightId" th:value="${flightId}" />
+                                         <button type="submit" class="text-green-600 hover:text-green-800 font-medium">Check-In</button>
+                                     </form>
 
-                                  <!-- Cancel Button (only if CONFIRMED or CHECKED-IN) -->
-                                 <form th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED') or #strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')}"
-                                       th:action="@{/staff/bookings/{id}/cancel(id=${passenger.bookingId})}" method="post" class="inline"
-                                       onsubmit="return confirm('Cancel booking for ' + [[${passenger.name}]] + ' (PNR: ' + [[${passenger.pnr}]] + ')?');">
-                                      <!-- Need flightId to redirect back -->
-                                     <input type="hidden" name="flightId" th:value="${flightId}" />
-                                     <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Cancel</button>
-                                 </form>
+                                      <!-- Cancel Button -->
+                                     <form th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED') or #strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')}"
+                                           th:action="@{/staff/bookings/{id}/cancel(id=${passenger.bookingId})}" method="post" class="inline"
+                                           onsubmit="return confirm('Cancel booking for ' + [[${passenger.name}]] + ' (PNR: ' + [[${passenger.pnr}]] + ')?');">
+                                          <input type="hidden" name="flightId" th:value="${flightId}" />
+                                         <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Cancel</button>
+                                     </form>
 
-                                 <span th:if="${#strings.equalsIgnoreCase(passenger.status, 'CANCELLED')}" class="text-gray-500 text-xs">Cancelled</span>
-                             </td>
-                        </tr>
+                                     <!-- *** NEW: Change Seat Button (Triggers JS) *** -->
+                                     <button th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED') or #strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')}"
+                                             type="button" class="text-blue-600 hover:text-blue-800 font-medium"
+                                             th:attr="onclick='toggleSeatChangeForm(\'' + ${passenger.bookingId} + '\')'">
+                                             Change Seat
+                                     </button>
+
+                                     <span th:if="${#strings.equalsIgnoreCase(passenger.status, 'CANCELLED')}" class="text-gray-500 text-xs">Cancelled</span>
+                                 </td>
+                            </tr>
+                            <!-- *** NEW: Hidden Row for Seat Change Form *** -->
+                             <tr th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED') or #strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')}"
+                                 th:id="'seat-change-form-' + ${passenger.bookingId}" class="seat-change-form-container bg-gray-50 border-b border-gray-200">
+                                <td colspan="6" class="px-4 py-3"> <!-- Span across columns -->
+                                     <form th:action="@{/staff/bookings/{id}/change-seat(id=${passenger.bookingId})}" method="post" class="flex items-center space-x-2">
+                                         <input type="hidden" name="flightId" th:value="${flightId}" /> <!-- Include flightId -->
+                                        <label th:for="'newSeat-' + ${passenger.bookingId}" class="text-xs font-medium text-gray-600">New Seat:</label>
+                                        <input th:id="'newSeat-' + ${passenger.bookingId}" type="text" name="newSeatNumber" th:value="${passenger.seatNo}" required placeholder="e.g., 15B"
+                                               class="text-xs p-1 border rounded w-20">
+                                        <button type="submit" class="bg-blue-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-blue-600 ml-2">Confirm Change</button>
+                                        <button type="button" th:attr="onclick='toggleSeatChangeForm(\'' + ${passenger.bookingId} + '\')'" class="text-gray-500 text-xs font-medium ml-2 hover:text-gray-700">Close</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </th:block>
                     </tbody>
                 </table>
             </div>
@@ -86,6 +118,29 @@
              <p class="text-lg text-gray-600 mt-2">The requested flight does not exist.</p>
         </div>
     </main>
+
+     <!-- *** NEW: JavaScript for Toggling Seat Change Form *** -->
+    <script>
+        function toggleSeatChangeForm(bookingId) {
+            const formRowId = 'seat-change-form-' + bookingId;
+            // Hide all potentially open seat change forms first
+            document.querySelectorAll('.seat-change-form-container').forEach(formRow => {
+                if (formRow.id !== formRowId) {
+                   formRow.style.display = 'none';
+                }
+            });
+
+            // Toggle the target form row
+            var formRow = document.getElementById(formRowId);
+            if (formRow) {
+                if (formRow.style.display === 'none' || formRow.style.display === '') {
+                    formRow.style.display = 'table-row'; // Show as a table row
+                } else {
+                    formRow.style.display = 'none'; // Hide it
+                }
+            }
+        }
+    </script>
 </body>
 </html>
 

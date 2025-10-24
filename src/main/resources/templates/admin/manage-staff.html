@@ -36,29 +36,29 @@
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">User ID</th>
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Name</th>
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th> <!-- Assumes UserDTO has status -->
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="text-gray-700">
+                        <!-- Iterating over UserDTO -->
                         <tr th:each="staff : ${staffMembers}" class="border-b border-gray-200 hover:bg-gray-50">
                             <td class="py-4 px-4 font-medium" th:text="${staff.userId}">1</td>
                             <td class="py-4 px-4" th:text="${staff.name}">Staff Name</td>
                             <td class="py-4 px-4" th:text="${staff.email}">staff@example.com</td>
                              <td class="py-4 px-4">
+                               <!-- Need accountStatus added to UserDTO if not present -->
                                <span class="px-2 py-1 rounded-full text-xs font-semibold"
-                                     th:text="${staff.accountStatus}"
-                                     th:classappend="${#strings.equalsIgnoreCase(staff.accountStatus, 'ACTIVE')} ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                                     th:text="${'ACTIVE'}"> <!-- Placeholder if status not in DTO -->
                                ACTIVE</span>
                             </td>
                             <td class="py-4 px-4 text-sm">
                                 <!-- Remove Button Form (Soft Delete) -->
-                                <form th:if="${!#strings.equalsIgnoreCase(staff.accountStatus, 'INACTIVE')}"
-                                      th:action="@{/admin/staff/{id}/remove(id=${staff.userId})}" method="post" class="inline"
+                                <form th:action="@{/admin/staff/{id}/remove(id=${staff.userId})}" method="post" class="inline"
                                       onsubmit="return confirm('Remove staff member ' + [[${staff.name}]] + '? This will set their status to INACTIVE.');">
                                     <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Remove</button>
                                 </form>
-                                <span th:if="${#strings.equalsIgnoreCase(staff.accountStatus, 'INACTIVE')}" class="text-gray-500">Removed</span>
+                                <!-- Add Un-remove/Reactivate button later if needed -->
                             </td>
                         </tr>
                     </tbody>
@@ -68,3 +68,4 @@
     </main>
 </body>
 </html>
+

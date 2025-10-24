@@ -16,9 +16,19 @@ public class Flight {
     @Column(name = "flight_id")
     private int flightId;
 
-    @Column(name = "airline")
+    // --- UPDATED: Relationship to Airline ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "airline_id", nullable = false)
+    private Airline airline;
 
-    private String airline;
+    // --- NEW: Relationship to Aircraft ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "aircraft_id", nullable = false)
+    private Aircraft aircraft;
+
+    // @Column(name = "airline")
+
+    // private String airline;
 
     @Column(name = "source")
     private String source;
@@ -35,13 +45,15 @@ public class Flight {
     @Column(name = "status")
     private String status;
 
-    @Column(name = "seats_total")
-    private int seatsTotal;
+    // @Column(name = "seats_total")
+    // private int seatsTotal;
 
     @Column(name = "seats_available")
     private int seatsAvailable;
 
-    private BigDecimal price;
+    // --- UPDATED: Renamed to basePrice ---
+    @Column(name = "base_price", nullable = false)
+    private BigDecimal basePrice; // Base price (e.g., for Economy)
 
     // This is the new relationship mapping
     @OneToMany(mappedBy = "flight", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -49,22 +61,29 @@ public class Flight {
     private List<Booking> bookings = new ArrayList<>();
 
     // --- Getters and Setters ---
-
-    public int getFlightId() {
+    public Integer getFlightId() {
         return flightId;
     }
 
-    public void setFlightId(int flightId) {
+    public void setFlightId(Integer flightId) {
         this.flightId = flightId;
     }
 
-    public String getAirline() {
+    public Airline getAirline() {
         return airline;
-    }
+    } // Updated getter type
 
-    public void setAirline(String airline) {
+    public void setAirline(Airline airline) {
         this.airline = airline;
-    }
+    } // Updated setter type
+
+    public Aircraft getAircraft() {
+        return aircraft;
+    } // New getter
+
+    public void setAircraft(Aircraft aircraft) {
+        this.aircraft = aircraft;
+    } // New setter
 
     public String getSource() {
         return source;
@@ -98,14 +117,9 @@ public class Flight {
         this.arrival = arrival;
     }
 
-    public int getSeatsTotal() {
-        return seatsTotal;
-    }
-
-    public void setSeatsTotal(int seatsTotal) {
-        this.seatsTotal = seatsTotal;
-    }
-
+    // public int getSeatsTotal() { return seatsTotal; } // Removed
+    // public void setSeatsTotal(int seatsTotal) { this.seatsTotal = seatsTotal; }
+    // // Removed
     public int getSeatsAvailable() {
         return seatsAvailable;
     }
@@ -114,15 +128,22 @@ public class Flight {
         this.seatsAvailable = seatsAvailable;
     }
 
-    public BigDecimal getPrice() {
-        return price;
+    public BigDecimal getBasePrice() {
+        return basePrice;
+    } // Updated getter
+
+    public void setBasePrice(BigDecimal basePrice) {
+        this.basePrice = basePrice;
+    } // Updated setter
+
+    public String getStatus() {
+        return status;
     }
 
-    public void setPrice(BigDecimal price) {
-        this.price = price;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
-    // This is the new getter that BookingService needs
     public List<Booking> getBookings() {
         return bookings;
     }
@@ -131,10 +152,9 @@ public class Flight {
         this.bookings = bookings;
     }
 
-    public String getStatus() {
-        return status;
-    }
-    public void setStatus(String status) {
-        this.status = status;
+    // Helper to get total seats from aircraft (lazy loading handled in service if
+    // needed)
+    public int getTotalSeats() {
+        return (this.aircraft != null) ? this.aircraft.getTotalSeats() : 0;
     }
 }

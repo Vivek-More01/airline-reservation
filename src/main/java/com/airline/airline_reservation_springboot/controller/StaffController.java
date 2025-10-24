@@ -88,4 +88,26 @@ public class StaffController {
          // Redirect back to the manifest page for the same flight
         return "redirect:/staff/flights/" + flightId + "/manifest";
     }
+
+    @PostMapping("/bookings/{bookingId}/change-seat")
+    public String changeSeatNumber(@PathVariable("bookingId") Integer bookingId,
+            @RequestParam("flightId") Integer flightId, // Needed for redirect
+            @RequestParam("newSeatNumber") String newSeatNumber,
+            RedirectAttributes redirectAttributes) {
+        try {
+            boolean success = bookingService.changeSeatNumber(bookingId, newSeatNumber);
+            if (success) {
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "Seat changed successfully to " + newSeatNumber + ".");
+            } else {
+                // This case might not be reachable if service throws exceptions
+                redirectAttributes.addFlashAttribute("errorMessage", "Could not change seat.");
+            }
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            // Catch exceptions from the service layer (e.g., seat taken, invalid state)
+            redirectAttributes.addFlashAttribute("errorMessage", "Seat Change Failed: " + e.getMessage());
+        }
+        // Redirect back to the manifest for the same flight
+        return "redirect:/staff/flights/" + flightId + "/manifest";
+    }
 }

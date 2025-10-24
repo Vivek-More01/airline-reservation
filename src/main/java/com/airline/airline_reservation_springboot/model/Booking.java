@@ -2,28 +2,28 @@ package com.airline.airline_reservation_springboot.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import java.math.BigDecimal; // Import BigDecimal
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Booking")
+@Table(name = "booking")
 public class Booking {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "booking_id")
-    private int bookingId;
+    private Integer bookingId; // Use Integer
 
-    // This is the "child" side. It will not be serialized, breaking the loop.
-    // The name "user" MUST exactly match the mappedBy value in the User class.
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    @JsonBackReference // Tells Jackson this is the "back" part, preventing the loop
-    private User user;
+    @Column(name = "seat_no", nullable = false)
+    private String seatNo;
 
+    // --- NEW: Relationship to SeatType ---
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "flight_id", nullable = false)
-    @JsonBackReference("flight-booking") // Added back reference
-    private Flight flight;
+    @JoinColumn(name = "seat_type_id", nullable = false)
+    private SeatType seatType;
+
+    // --- NEW: Price paid at time of booking ---
+    @Column(name = "calculated_price", nullable = false)
+    private BigDecimal calculatedPrice;
 
     @Column(nullable = false)
     private String status;
@@ -31,36 +31,51 @@ public class Booking {
     @Column(name = "booking_date", nullable = false)
     private LocalDateTime bookingDate;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String pnr;
 
-    @Column(name = "Seat_no", nullable = false)
-    private String seat;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "flight_id", nullable = false)
+    @JsonBackReference("flight-booking")
+    private Flight flight;
 
-    // Getters and Setters
-    public int getBookingId() {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference // Keep this for User-Booking relationship
+    private User user;
+
+    // --- Getters and Setters ---
+    public Integer getBookingId() {
         return bookingId;
     }
 
-    public void setBookingId(int bookingId) {
+    public void setBookingId(Integer bookingId) {
         this.bookingId = bookingId;
     }
 
-    public User getUser() {
-        return user;
+    public String getSeatNo() {
+        return seatNo;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setSeatNo(String seatNo) {
+        this.seatNo = seatNo;
     }
 
-    public Flight getFlight() {
-        return flight;
-    }
+    public SeatType getSeatType() {
+        return seatType;
+    } // New Getter
 
-    public void setFlight(Flight flight) {
-        this.flight = flight;
-    }
+    public void setSeatType(SeatType seatType) {
+        this.seatType = seatType;
+    } // New Setter
+
+    public BigDecimal getCalculatedPrice() {
+        return calculatedPrice;
+    } // New Getter
+
+    public void setCalculatedPrice(BigDecimal calculatedPrice) {
+        this.calculatedPrice = calculatedPrice;
+    } // New Setter
 
     public String getStatus() {
         return status;
@@ -86,12 +101,19 @@ public class Booking {
         this.pnr = pnr;
     }
 
-    public void setSeat(String seat) {
-        this.seat = seat;
+    public Flight getFlight() {
+        return flight;
     }
 
-    public String getSeat() {
-        return seat;
+    public void setFlight(Flight flight) {
+        this.flight = flight;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }
-

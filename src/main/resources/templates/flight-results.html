@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flight Results</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-    </style>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
 <body class="bg-gray-100">
     <div th:replace="~{header :: navbar}"></div>
@@ -16,12 +14,11 @@
         <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
             <h1 class="text-3xl font-bold text-gray-800 mb-6">Available Flights</h1>
 
-            <!-- Display error message if any -->
             <div th:if="${errorMessage}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
                 <strong class="font-bold">Error!</strong>
                 <span class="block sm:inline" th:text="${errorMessage}"></span>
             </div>
-            
+
             <div th:if="${flights.isEmpty()}" class="text-center py-10">
                 <p class="text-xl text-gray-600">No flights found for the selected route and date.</p>
             </div>
@@ -33,20 +30,21 @@
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Airline</th>
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Departure</th>
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Arrival</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</th>
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Base Price</th>
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"></th>
                         </tr>
                     </thead>
                     <tbody class="text-gray-700">
+                        <!-- Iterates over FlightDetailsDTO -->
                         <tr th:each="flight : ${flights}" class="border-b border-gray-200 hover:bg-gray-50">
-                            <td class="py-4 px-4" th:text="${flight.airline}">Emirates</td>
+                            <!-- Use fields from FlightDetailsDTO -->
+                            <td class="py-4 px-4" th:text="${flight.airlineName}">Emirates</td>
                             <td class="py-4 px-4" th:text="${#temporals.format(flight.departure, 'dd MMM yyyy, HH:mm')}">16 Oct 2025, 10:00</td>
                             <td class="py-4 px-4" th:text="${#temporals.format(flight.arrival, 'dd MMM yyyy, HH:mm')}">16 Oct 2025, 22:00</td>
-                            <td class="py-4 px-4 font-semibold" th:text="'$' + ${#numbers.formatDecimal(flight.price, 1, 2)}">$650.00</td>
+                            <td class="py-4 px-4 font-semibold" th:text="${flight.formattedBasePrice}">$650.00</td>
                             <td class="py-4 px-4 text-right">
-                                <!-- THIS IS THE CRUCIAL CHANGE -->
-                                <!-- This link now points to your React application's development server -->
-                                <a th:href="@{'http://localhost:3000/?flightId=' + ${flight.flightId}}"
+                                <!-- Link uses flightId from DTO -->
+                                <a th:href="@{'http://localhost:5173/?flightId=' + ${flight.flightId}}"
                                    class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
                                     Select Seat
                                 </a>
