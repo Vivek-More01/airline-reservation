@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" viewport="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
     <title>Passenger Manifest</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style> body { font-family: 'Inter', sans-serif; } </style>
@@ -11,18 +11,22 @@
     <main class="container mx-auto px-4 py-8">
         <a th:href="@{/staff/dashboard}" class="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">&larr; Back to Dashboard</a>
 
-        <!-- *** CORRECTED: Check if the 'manifest' object exists *** -->
+         <!-- Messages -->
+         <div th:if="${successMessage}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline" th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline" th:text="${errorMessage}"></span>
+        </div>
+
         <div th:if="${manifest != null}">
-            <!-- *** CORRECTED: Use fields from the 'manifest' DTO *** -->
             <h1 class="text-3xl font-bold text-gray-800" th:text="${manifest.airline} + ' - Passenger Manifest'">Flight Manifest</h1>
             <p class="text-xl text-gray-600 mb-6" th:text="${manifest.source} + ' to ' + ${manifest.destination}">Route Details</p>
 
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <!-- *** CORRECTED: Check if the passenger list in 'manifest' is empty *** -->
                 <div th:if="${manifest.isPassengerListEmpty()}" class="text-center py-10">
                     <p class="text-lg text-gray-500">No passengers have booked this flight yet.</p>
                 </div>
-                <!-- *** CORRECTED: Iterate over the passenger list from 'manifest' *** -->
                 <table th:if="${!manifest.isPassengerListEmpty()}" class="min-w-full bg-white">
                     <thead class="bg-gray-200">
                         <tr>
@@ -30,22 +34,53 @@
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Seat No.</th>
                             <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">PNR</th>
+                            <!-- *** NEW: Status Column *** -->
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                            <!-- *** NEW: Actions Column *** -->
+                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="text-gray-700">
-                        <!-- *** CORRECTED: Use fields from the PassengerInfoDTO within 'manifest.passengers' *** -->
                         <tr th:each="passenger : ${manifest.passengers}" class="border-b border-gray-200">
                             <td class="py-4 px-4 font-semibold" th:text="${passenger.name}">John Doe</td>
                             <td class="py-4 px-4" th:text="${passenger.email}">john.doe@example.com</td>
                             <td class="py-4 px-4 font-bold" th:text="${passenger.seatNo}">14A</td>
                             <td class="py-4 px-4 font-mono text-indigo-600" th:text="${passenger.pnr}">EKXYZ123</td>
+                            <!-- *** NEW: Display Status *** -->
+                            <td class="py-4 px-4">
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                                      th:text="${passenger.status}"
+                                      th:classappend="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED')} ? 'bg-blue-100 text-blue-800' :
+                                                     (${#strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')} ? 'bg-green-100 text-green-800' :
+                                                     (${#strings.equalsIgnoreCase(passenger.status, 'CANCELLED')} ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'))">
+                                CONFIRMED</span>
+                            </td>
+                             <!-- *** NEW: Action Buttons *** -->
+                             <td class="py-4 px-4 text-sm space-x-2">
+                                 <!-- Check-in Button (only if CONFIRMED) -->
+                                 <form th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED')}"
+                                       th:action="@{/staff/bookings/{id}/checkin(id=${passenger.bookingId})}" method="post" class="inline">
+                                     <!-- Need flightId to redirect back -->
+                                     <input type="hidden" name="flightId" th:value="${flightId}" />
+                                     <button type="submit" class="text-green-600 hover:text-green-800 font-medium">Check-In</button>
+                                 </form>
+
+                                  <!-- Cancel Button (only if CONFIRMED or CHECKED-IN) -->
+                                 <form th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED') or #strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')}"
+                                       th:action="@{/staff/bookings/{id}/cancel(id=${passenger.bookingId})}" method="post" class="inline"
+                                       onsubmit="return confirm('Cancel booking for ' + [[${passenger.name}]] + ' (PNR: ' + [[${passenger.pnr}]] + ')?');">
+                                      <!-- Need flightId to redirect back -->
+                                     <input type="hidden" name="flightId" th:value="${flightId}" />
+                                     <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Cancel</button>
+                                 </form>
+
+                                 <span th:if="${#strings.equalsIgnoreCase(passenger.status, 'CANCELLED')}" class="text-gray-500 text-xs">Cancelled</span>
+                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-
-        <!-- Handle case where flight wasn't found ('manifest' object is null) -->
         <div th:if="${manifest == null}" class="text-center py-10">
              <h1 class="text-3xl font-bold text-red-600">Flight Not Found</h1>
              <p class="text-lg text-gray-600 mt-2">The requested flight does not exist.</p>

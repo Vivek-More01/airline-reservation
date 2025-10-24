@@ -1,12 +1,13 @@
 package com.airline.airline_reservation_springboot.controller;
 
+import com.airline.airline_reservation_springboot.dto.AnalyticsSummaryDTO;
 import com.airline.airline_reservation_springboot.dto.BookingSummaryDTO;
 import com.airline.airline_reservation_springboot.model.Flight;
 import com.airline.airline_reservation_springboot.model.User;
 import com.airline.airline_reservation_springboot.service.BookingService;
 import com.airline.airline_reservation_springboot.service.FlightService;
 import com.airline.airline_reservation_springboot.service.UserService;
-
+import com.airline.airline_reservation_springboot.service.AnalyticsService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,11 +26,14 @@ public class AdminController {
     private final FlightService flightService;
     UserService userService;
     BookingService bookingService;
+    private final AnalyticsService analyticsService;
 
-    public AdminController(FlightService flightService, com.airline.airline_reservation_springboot.service.UserService userService, com.airline.airline_reservation_springboot.service.BookingService bookingService) {
+    public AdminController(FlightService flightService, UserService userService, BookingService bookingService, AnalyticsService analyticsService) {
         this.flightService = flightService;
         this.userService = userService;
         this.bookingService = bookingService;
+        this.analyticsService = analyticsService;
+
     }
 
     /**
@@ -248,5 +252,15 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "Could not unban passenger. User not found.");
         }
         return "redirect:/admin/passengers/manage"; // Redirect back to the combined page
+    }
+
+    /**
+     * Displays the analytics dashboard page.
+     */
+    @GetMapping("/analytics")
+    public String showAnalyticsPage(Model model) {
+        AnalyticsSummaryDTO summary = analyticsService.getAnalyticsSummary();
+        model.addAttribute("summary", summary);
+        return "admin/analytics"; // Points to templates/admin/analytics.html
     }
 }

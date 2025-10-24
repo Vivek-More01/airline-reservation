@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>System Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-gray-100">
+    <div th:replace="~{header :: navbar}"></div>
+
+    <main class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">System Analytics Overview</h1>
+
+        <div th:if="${summary != null}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Card 1: Active Flights -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Active Flights</h2>
+                <p class="text-4xl font-bold text-indigo-600" th:text="${summary.totalActiveFlights}">0</p>
+                <p class="text-xs text-gray-500 mt-1">Flights currently scheduled or delayed.</p>
+            </div>
+
+            <!-- Card 2: Confirmed Bookings -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Confirmed Bookings</h2>
+                <p class="text-4xl font-bold text-green-600" th:text="${summary.totalConfirmedBookings}">0</p>
+                 <p class="text-xs text-gray-500 mt-1">Total active passenger bookings.</p>
+            </div>
+
+            <!-- Card 3: Total Revenue -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Estimated Revenue</h2>
+                <p class="text-4xl font-bold text-blue-600" th:text="${summary.formattedTotalRevenue}">$0.00</p>
+                 <p class="text-xs text-gray-500 mt-1">Sum of prices for confirmed bookings.</p>
+            </div>
+
+             <!-- Card 4: Load Factor -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase mb-2">Average Load Factor</h2>
+                <p class="text-4xl font-bold text-orange-600" th:text="${summary.formattedAverageLoadFactor}">0.0%</p>
+                 <p class="text-xs text-gray-500 mt-1">Average occupancy across active flights.</p>
+            </div>
+        </div>
+         <div th:if="${summary == null}" class="text-center py-10 bg-white rounded-lg shadow-md">
+             <p class="text-xl text-gray-600">Could not load analytics data.</p>
+        </div>
+
+        <!-- Placeholder for future charts/reports -->
+        <div class="mt-8 bg-white p-6 rounded-lg shadow-md text-center">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">More Reports Coming Soon</h2>
+            <p class="text-gray-500">(e.g., Popular Routes, Revenue Trends)</p>
+        </div>
+
+    </main>
+</body>
+</html>
+```
+
+### **Step 6: Add Link to Admin Panel**
+
+Add a link to the "Analytics" page from your main `admin/dashboard.html`.
+
+```html
+

@@ -84,7 +84,9 @@ public class FlightService {
                     booking.getUser().getName(),
                     booking.getUser().getEmail(),
                     booking.getSeat(),
-                    booking.getPnr()
+                    booking.getPnr(),
+                    booking.getBookingId(),
+                    booking.getStatus()
                 ))
                 .collect(Collectors.toList());
 

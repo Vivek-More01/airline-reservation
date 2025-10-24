@@ -46,16 +46,19 @@
             <span class="block sm:inline" th:text="${errorMessage}"></span>
         </div>
 
-        <!-- Example addition in admin/dashboard.html -->
+       <!-- Example addition in admin/dashboard.html -->
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Flight Management</h1>
-            <div class="flex flex-wrap gap-2"> <!-- Use flex-wrap for smaller screens -->
-                <a th:href="@{/admin/passengers/manage}" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-700">
-                    Manage Passengers
-                </a>
+            <div class="flex flex-wrap gap-2">
                 <!-- New Link -->
+                <a th:href="@{/admin/analytics}" class="bg-purple-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700">
+                    View Analytics
+                </a>
                 <a th:href="@{/admin/staff/manage}" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
                     Manage Staff
+                </a>
+                <a th:href="@{/admin/passengers/manage}" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-700">
+                    Manage Passengers
                 </a>
                 <a th:href="@{/admin/flights/add}" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">
                     + Add New Flight

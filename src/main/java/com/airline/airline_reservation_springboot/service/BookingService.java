@@ -149,6 +149,64 @@ public class BookingService {
         return false; // Booking not found
     }
 
+    /**
+     * Checks in a passenger by updating their booking status.
+     * @param bookingId The ID of the booking to check in.
+     * @return true if successful, false if booking not found or not in 'CONFIRMED' state.
+     */
+    @Transactional
+    public boolean checkInPassenger(Integer bookingId) {
+        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            System.out.println("Checking in booking ID: " + bookingId + " with status: " + booking.getStatus());
+            // Only allow check-in for confirmed bookings
+            if ("CONFIRMED".equalsIgnoreCase(booking.getStatus())) {
+                System.out.println("Checking in booking ID: " + bookingId);
+                booking.setStatus("CHECKED-IN");
+                System.out.println("Booking ID: " + bookingId + " is now checked in. New status: " + booking.getStatus());
+                bookingRepository.save(booking);
+                return true;
+            }
+        }
+        return false; // Booking not found or not in correct state
+    }
+
+    /**
+     * Allows staff/admin to cancel any booking.
+     * 
+     * @param bookingId The ID of the booking to cancel.
+     * @return true if cancellation was successful, false otherwise.
+     */
+    @Transactional
+    public boolean cancelBookingByStaff(Integer bookingId) {
+        Optional<Booking> bookingOpt = bookingRepository.findById(bookingId);
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            // Staff might be able to cancel CONFIRMED or CHECKED-IN bookings
+            if ("CANCELLED".equalsIgnoreCase(booking.getStatus())) {
+                return true; // Already cancelled
+            }
+            return performCancellation(booking); // Use shared logic
+        }
+        return false; // Booking not found
+    }
+
+    /** Shared logic for performing a booking cancellation. */
+    private boolean performCancellation(Booking booking) {
+        booking.setStatus("CANCELLED");
+        bookingRepository.save(booking);
+
+        // Increment available seats ONLY if the flight itself isn't cancelled
+        Flight flight = booking.getFlight();
+        if (!"Cancelled".equalsIgnoreCase(flight.getStatus())) {
+            flight.setSeatsAvailable(flight.getSeatsAvailable() + 1);
+            flightRepository.save(flight);
+        }
+        // Add refund logic / notifications here in a real app
+        return true;
+    }
+
     private String generatePnr() {
         return UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }

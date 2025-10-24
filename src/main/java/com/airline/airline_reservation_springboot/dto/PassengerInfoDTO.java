@@ -8,12 +8,18 @@ public class PassengerInfoDTO {
     private String email;
     private String seatNo;
     private String pnr;
+    private int bookingId;
+    private String status;
 
-    public PassengerInfoDTO(String name, String email, String seatNo, String pnr) {
+    // Constructor
+
+    public PassengerInfoDTO(String name, String email, String seatNo, String pnr, int bookingId, String status) {
         this.name = name;
         this.email = email;
         this.seatNo = seatNo;
         this.pnr = pnr;
+        this.bookingId = bookingId;
+        this.status = status;
     }
 
     // Getters
@@ -31,5 +37,13 @@ public class PassengerInfoDTO {
 
     public String getPnr() {
         return pnr;
+    }
+
+    public int getBookingId() {
+        return bookingId;
+    }
+
+    public String getStatus() {
+        return status;
     }
 }

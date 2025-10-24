@@ -2,13 +2,16 @@ package com.airline.airline_reservation_springboot.controller;
 
 import com.airline.airline_reservation_springboot.dto.FlightManifestDTO;
 import com.airline.airline_reservation_springboot.dto.FlightSummaryDTO;
+import com.airline.airline_reservation_springboot.service.BookingService;
 // import com.airline.airline_reservation_springboot.model.Flight;
 import com.airline.airline_reservation_springboot.service.FlightService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+// import org.springframework.web.bind.annotation.GetMapping;
+// import org.springframework.web.bind.annotation.PathVariable;
+// import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,9 +21,12 @@ import java.util.Optional;
 public class StaffController {
 
     private final FlightService flightService;
+    private final BookingService bookingService; // Inject BookingService
 
-    public StaffController(FlightService flightService) {
+    // Update constructor
+    public StaffController(FlightService flightService, BookingService bookingService) {
         this.flightService = flightService;
+        this.bookingService = bookingService;
     }
 
     /**
@@ -53,5 +59,33 @@ public class StaffController {
         }
         
         return "staff/manifest"; 
+    }
+
+    @PostMapping("/bookings/{bookingId}/checkin")
+    public String checkInPassenger(@PathVariable("bookingId") Integer bookingId,
+                                   @RequestParam("flightId") Integer flightId, // Get flightId to redirect back
+                                   RedirectAttributes redirectAttributes) {
+        boolean success = bookingService.checkInPassenger(bookingId);
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Passenger checked in successfully.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Could not check in passenger (invalid booking or status).");
+        }
+        // Redirect back to the manifest page for the same flight
+        return "redirect:/staff/flights/" + flightId + "/manifest";
+    }
+
+    @PostMapping("/bookings/{bookingId}/cancel")
+    public String cancelBookingByStaff(@PathVariable("bookingId") Integer bookingId,
+                                       @RequestParam("flightId") Integer flightId, // Get flightId to redirect back
+                                       RedirectAttributes redirectAttributes) {
+        boolean success = bookingService.cancelBookingByStaff(bookingId);
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Booking cancelled successfully.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Could not cancel booking (invalid booking or status).");
+        }
+         // Redirect back to the manifest page for the same flight
+        return "redirect:/staff/flights/" + flightId + "/manifest";
     }
 }
