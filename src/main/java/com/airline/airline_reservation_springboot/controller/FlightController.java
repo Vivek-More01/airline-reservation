@@ -1,7 +1,7 @@
 package com.airline.airline_reservation_springboot.controller;
 
 import com.airline.airline_reservation_springboot.dto.FlightSummaryDTO;
-import com.airline.airline_reservation_springboot.model.Flight;
+// import com.airline.airline_reservation_springboot.model.Flight;
 import com.airline.airline_reservation_springboot.service.FlightService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;

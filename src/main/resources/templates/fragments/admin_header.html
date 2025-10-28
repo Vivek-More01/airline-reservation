@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+    <!--
+        Admin Header Fragment
+        - Added gradient background.
+        - Updated title color for contrast.
+        - Updated button styling to match main site header.
+    -->
+    <!-- *** UPDATED: Added gradient background, removed border/shadow *** -->
+    <header th:fragment="adminHeader(pageTitle)" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-lg shadow-md mb-6 flex justify-between items-center z-20">
+        <!-- Added py-4 for vertical padding -->
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+             <div class="flex items-center justify-between h-16">
+                <!-- Left side: Title -->
+                <div class="flex items-center">
+                    <!-- Page Title (Updated color) -->
+                    <h1 class="text-3xl font-bold text-white" th:text="${pageTitle} ?: 'Admin Panel'">Default Title</h1>
+                </div>
+
+                <!-- Right side: Action Buttons (Updated Styling) -->
+                 <div class="flex items-center space-x-2 md:space-x-3">
+                     <!-- Secondary Button Style (Adjusted for light text on dark bg) -->
+                     <a th:href="@{/admin/analytics}" class="text-indigo-100 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Analytics</a>
+                     <a th:href="@{/admin/staff/manage}" class="text-indigo-100 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Staff</a>
+                     <a th:href="@{/admin/passengers/manage}" class="text-indigo-100 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Passengers</a>
+                     <!-- Primary Button Style (Adjusted for contrast) -->
+                     <a th:href="@{/admin/dashboard}" class="text-indigo-100 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Flight Management</a>
+                </div>
+             </div>
+        </div>
+    </header>
+
+</body>
+</html>
+

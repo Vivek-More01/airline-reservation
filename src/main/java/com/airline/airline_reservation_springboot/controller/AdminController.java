@@ -22,7 +22,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
+// import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -141,7 +141,11 @@ public class AdminController {
     @PostMapping("/flights/{flightId}/cancel")
     public String cancelFlight(@PathVariable("flightId") Integer flightId, RedirectAttributes redirectAttributes) {
         boolean success = flightService.cancelFlight(flightId);
-        // ... messages ...
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Flight canceled successfully.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to cancel flight.");
+        }
         return "redirect:/admin/dashboard";
     }
 
@@ -151,7 +155,11 @@ public class AdminController {
             @RequestParam("newArrival") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime newArrival,
             RedirectAttributes redirectAttributes) {
         boolean success = flightService.delayFlight(flightId, newDeparture, newArrival);
-        // ... messages ...
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Flight delayed successfully.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delay flight.");
+        }
         return "redirect:/admin/dashboard";
     }
 
@@ -171,40 +179,52 @@ public class AdminController {
     }
 
     @PostMapping("/staff/add")
-    // Use DTO for form binding, manually create User entity
-    public String processAddStaff(@ModelAttribute("staffUser") UserDTO staffDto, BindingResult result,
+    public String processAddStaff(@ModelAttribute("staffUser") UserDTO staffDto, // Still use DTO for name/email
+            @RequestParam("password") String password, // Get password separately
+            BindingResult result, // For DTO validation errors
+            Model model, // Add model to pass back password error
             RedirectAttributes redirectAttributes) {
-        // Basic validation on DTO fields
+
+        boolean hasErrors = false;
+        // Check if email already exists
         if (userService.findByEmail(staffDto.getEmail()).isPresent()) {
             result.rejectValue("email", "error.staffUser", "Email address already exists.");
-        }
-        // Password validation would need password fields added to DTO if binding
-        // directly
-        // For simplicity, let's assume password handling remains separate or adjusted
-        // Example: Add password field to DTO and validate here.
-
-        if (result.hasErrors()) {
-            return "admin/add-staff";
+            hasErrors = true;
         }
 
-        // Manually create User entity from DTO
+        // Manually validate password
+        String passwordError = null;
+        if (password == null || password.length() < 6) {
+            passwordError = "Password must be at least 6 characters.";
+            hasErrors = true;
+        }
+
+        if (hasErrors || result.hasErrors()) {
+            // Pass the password error back to the template if it exists
+            if (passwordError != null) {
+                model.addAttribute("passwordError", passwordError);
+            }
+            // Need to pass staffUser back in case of other errors for th:object
+            model.addAttribute("staffUser", staffDto);
+            return "admin/add-staff"; // Return to form
+        }
+
+        // Manually create User entity from DTO and password parameter
         User newUser = new User();
         newUser.setName(staffDto.getName());
         newUser.setEmail(staffDto.getEmail());
-        // Password needs to be handled - maybe add password fields to DTO or require
-        // admin to set temporary one
-        newUser.setPassword("temporaryPassword"); // Placeholder - Needs secure handling!
-        newUser.setRole("Staff");
+        newUser.setPassword(password); // Set the plain password (service will hash it)
+        newUser.setAccountStatus("ACTIVE");
+        // newUser.setAccountStatus("ACTIVE"); // registerUser sets this
 
-        userService.registerUser(newUser); // registerUser handles hashing
+        userService.registerUser(newUser, "Staff"); // registerUser handles hashing
 
         redirectAttributes.addFlashAttribute("successMessage", "Staff member added successfully.");
         return "redirect:/admin/staff/manage";
     }
-
     @PostMapping("/staff/{userId}/remove")
     public String removeStaffMember(@PathVariable("userId") Integer userId, RedirectAttributes redirectAttributes) {
-        boolean success = userService.deleteUser(userId);
+        // boolean success = userService.deleteUser(userId);
         // ... messages ...
         return "redirect:/admin/staff/manage";
     }
@@ -239,15 +259,18 @@ public class AdminController {
 
     @PostMapping("/passengers/{userId}/ban")
     public String banPassenger(@PathVariable("userId") Integer userId, RedirectAttributes redirectAttributes) {
-        boolean success = userService.banUser(userId);
-        // ... messages ...
+        userService.banUser(userId);
         return "redirect:/admin/passengers/manage";
     }
 
     @PostMapping("/passengers/{userId}/unban")
     public String unbanPassenger(@PathVariable("userId") Integer userId, RedirectAttributes redirectAttributes) {
         boolean success = userService.unbanUser(userId);
-        // ... messages ...
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Passenger unbanned successfully.");
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to unban passenger.");
+        }
         return "redirect:/admin/passengers/manage";
     }
 

@@ -1,0 +1,14 @@
+html {
+    scroll-behavior: smooth;
+}
+
+/* Optional: Add some specific styling for sections if needed 
+#popular-destinations .grid div {
+    /* Example: Add a slight border */
+    /* border: 1px solid #e5e7eb; 
+}
+
+#offers .grid div {
+     /* Example: Add more vertical padding */
+    /* padding-top: 2rem; padding-bottom: 2rem; 
+}

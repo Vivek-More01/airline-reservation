@@ -4,11 +4,28 @@
     <meta charset="UTF-8">
     <title>Add New Flight</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style> body { font-family: 'Inter', sans-serif; } </style>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script> <!-- Add Alpine.js -->
+    <link rel="stylesheet" th:href="@{/css/custom.css}" />
+    <style> body { font-family: 'Inter', sans-serif; }
+        .content-wrapper {
+            padding-left: 16rem; /* Adjust if sidebar width (w-64) changes */
+            transition: padding-left 0.3s ease-in-out; /* Smooth transition */
+        }
+        /* Removes left padding when the sidebar has the '-translate-x-full' class (is hidden) */
+        aside.-translate-x-full + .content-wrapper {
+             padding-left: 0;
+        } </style>
 </head>
-<body class="bg-gray-100">
-    <div th:replace="~{header :: navbar}"></div>
+<body class="bg-gray-100" x-data="{ isOpen: true }">
+    <!-- Sidebar Fragment -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <!-- Main Content Area -->
+    <div class="content-wrapper">
+        <div th:replace="~{header :: navbar}"></div>
+        <!-- *** UPDATED Admin Header Bar Styling *** -->
     <main class="container mx-auto px-4 py-8">
+        <div th:replace="~{fragments/admin_header :: adminHeader(pageTitle='System Analytics Overview')}"></div>
         <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
             <h1 class="text-2xl font-bold text-gray-800 mb-6">Add a New Flight</h1>
 
@@ -68,6 +85,7 @@
             </form>
         </div>
     </main>
+</div>
 </body>
 </html>
 

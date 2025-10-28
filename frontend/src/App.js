@@ -3,33 +3,21 @@ import AirplaneLayout from "./AirplaneLayout";
 import "./App.css";
 
 function App() {
-  // Add state to hold the current user
   const [currentUser, setCurrentUser] = useState(null);
   const [flightDetails, setFlightDetails] = useState(null);
-  const [selectedSeat, setSelectedSeat] = useState(null);
+  // --- CHANGE: State for multiple seats ---
+  const [selectedSeats, setSelectedSeats] = useState([]); // Now an array
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // This useEffect runs once when the component loads
   useEffect(() => {
-    // --- NEW: Check who is logged in ---
-    fetch("http://localhost:8080/api/user/me", {
-      credentials: "include", // Crucial: tells the browser to send cookies
-    })
-      .then((response) => {
-        if (response.ok) {
-          return response.json();
-        }
-        console.log("User session:");
-        return null; // Not logged in
-      })
-      .then((user) => {
-        console.log("User session:", user);
-        setCurrentUser(user); // Store the user, or null if not logged in
-      })
+    // --- Fetch user session ---
+    fetch("http://localhost:8080/api/user/me", { credentials: "include" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((user) => setCurrentUser(user))
       .catch((err) => console.error("Error fetching user session:", err));
 
-    // --- Existing code to fetch flight details ---
+    // --- Fetch flight details ---
     const params = new URLSearchParams(window.location.search);
     const flightId = params.get("flightId");
     if (!flightId) {
@@ -37,9 +25,8 @@ function App() {
       setLoading(false);
       return;
     }
-
     fetch(`http://localhost:8080/api/flights/${flightId}`, {
-      credentials: "include", // Crucial: send cookies with this request too
+      credentials: "include",
     })
       .then((response) => {
         if (!response.ok) throw new Error("Flight not found or API error.");
@@ -51,93 +38,106 @@ function App() {
       })
       .catch((err) => {
         setError(err.message);
-        console.error("Error fetching flight details:", err);
         setLoading(false);
       });
   }, []);
 
-  const handleBooking = () => {
-    if (!currentUser) {
-      alert("Session expired. Please log in again to book a flight.");
-      // Redirect to the login page, passing a 'return' URL
-      window.location.href = `http://localhost:8080/login?returnUrl=${window.location.href}`;
-      return;
-    }
-    if (!selectedSeat) {
-      alert("Please select a seat first.");
-      return;
-    }
-    setLoading(true);
+  // --- CHANGE: Seat selection/deselection logic ---
+  const handleSeatSelect = (seatNumber) => {
+    setSelectedSeats((prevSeats) => {
+      if (prevSeats.includes(seatNumber)) {
+        // If already selected, remove it (deselect)
+        return prevSeats.filter((seat) => seat !== seatNumber);
+      } else {
+        // If not selected, add it
+        return [...prevSeats, seatNumber];
+      }
+    });
+  };
 
-    fetch("http://localhost:8080/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include", // Crucial: send cookies with the booking request
-      body: JSON.stringify({
-        flightId: flightDetails.flightId,
-        seatNumber: selectedSeat,
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          return response.text().then((text) => {
-            throw new Error(text || "Booking failed");
-          });
-        }
-        return response.json();
-      })
-      .then((newBooking) => {
-        window.location.href = `http://localhost:8080/booking-confirmation/${newBooking.bookingId}`;
-      })
-      .catch((error) => {
-        alert(`Booking failed: ${error.message}`);
-        setLoading(false);
-      });
+  // --- CHANGE: Handle proceeding to passenger details ---
+  const handleProceed = () => {
+    if (!currentUser) {
+      alert("Session expired. Please log in again to book flights.");
+      window.location.href = `http://localhost:8080/login?returnUrl=${encodeURIComponent(
+        window.location.href
+      )}`;
+      return;
+    }
+    if (selectedSeats.length === 0) {
+      alert("Please select at least one seat.");
+      return;
+    }
+
+    // Build the URL for the passenger details form
+    const params = new URLSearchParams();
+    params.append("flightId", flightDetails.flightId);
+    selectedSeats.forEach((seat) => params.append("seatNumbers", seat));
+
+    // Redirect to the Spring Boot Thymeleaf page
+    window.location.href = `http://localhost:8080/booking/passenger-details?${params.toString()}`;
   };
 
   if (loading) return <div className="status-message">Loading...</div>;
   if (error) return <div className="status-message error">{error}</div>;
+  if (!flightDetails)
+    return <div className="status-message">Flight details not available.</div>; // Added check
 
   return (
     <div className="container">
-      {/* Show a welcome message if the user is logged in */}
       {currentUser && (
         <div className="welcome-banner">Welcome, {currentUser.name}!</div>
       )}
 
       <div className="card">
-        {/* ... rest of your JSX remains the same ... */}
         <div className="header">
-          <h1>Select Your Seat</h1>
+          <h1>Select Your Seat(s)</h1> {/* Updated Title */}
           <div className="flight-info">
             <p>
-              {flightDetails.airline}: {flightDetails.source} to{" "}
+              {flightDetails.airlineName}: {flightDetails.source} to{" "}
               {flightDetails.destination}
-            </p>
-            <p className="price">Price: ${flightDetails.price.toFixed(2)}</p>
+            </p>{" "}
+            {/* Use DTO field */}
+            <p className="price">
+              Base Price: $
+              {flightDetails.basePrice
+                ? flightDetails.basePrice.toFixed(2)
+                : "N/A"}
+            </p>{" "}
+            {/* Use DTO field */}
           </div>
         </div>
         <div className="seat-map-container">
           <AirplaneLayout
-            onSelectSeat={setSelectedSeat}
-            selectedSeat={selectedSeat}
+            onSelectSeat={handleSeatSelect} // Updated handler
+            selectedSeats={selectedSeats} // Pass array
             bookedSeats={flightDetails.bookedSeats}
+            aircraftModel={flightDetails.aircraftModel} // Pass model for layout logic
+            seatLayoutJson={flightDetails.seatLayoutJson} // Pass layout JSON
           />
         </div>
         <div className="footer">
-          {selectedSeat ? (
+          {/* Display selected seats */}
+          <div className="selected-seats-info mb-4">
+            Selected Seats:{" "}
+            {selectedSeats.length > 0 ? selectedSeats.join(", ") : "None"}
+          </div>
+          {/* Updated Button */}
+          {selectedSeats.length > 0 ? (
             <button
-              onClick={handleBooking}
+              onClick={handleProceed}
               disabled={loading}
               className="confirm-button"
             >
               {loading
                 ? "Processing..."
-                : `Confirm Booking for Seat ${selectedSeat}`}
+                : `Proceed (${selectedSeats.length} Seat${
+                    selectedSeats.length > 1 ? "s" : ""
+                  })`}
             </button>
           ) : (
             <p className="prompt-text">
-              Please select a seat from the map above.
+              Please select one or more seats from the map above.
             </p>
           )}
         </div>

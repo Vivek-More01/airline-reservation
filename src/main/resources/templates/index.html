@@ -2,44 +2,118 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Airline Reservation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Added Viewport -->
+    <title>Airline Reservation - Search Flights</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" th:href="@{/css/custom.css}" /> <!-- Add custom CSS -->
-    <style> 
+    <link rel="stylesheet" th:href="@{/css/custom.css}" />
+    <!-- Link to new page-specific CSS -->
+    <link rel="stylesheet" th:href="@{/css/index.css}" />
+    <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
 <body class="bg-gray-100">
 
-<!-- Include the header fragment -->
-<div th:replace="~{header :: navbar}"></div>
+    <!-- Include the header fragment -->
+    <div th:replace="~{header :: navbar}"></div>
 
-<div class="container mx-auto mt-10 p-4">
-    <div class="bg-white p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Find Your Next Flight</h1>
-        <form th:action="@{/search}" method="get">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                    <label for="source" class="block text-gray-700 font-bold mb-2">From</label>
-                    <input type="text" id="source" name="source" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" placeholder="e.g., New York" required>
-                </div>
-                <div>
-                    <label for="destination" class="block text-gray-700 font-bold mb-2">To</label>
-                    <input type="text" id="destination" name="destination" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" placeholder="e.g., London" required>
-                </div>
-                <div>
-                    <label for="departureDate" class="block text-gray-700 font-bold mb-2">Departure Date</label>
-                    <input type="date" id="departureDate" name="departureDate" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" required>
-                </div>
-            </div>
-            <div class="text-center">
-                <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                    Search Flights
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
+    <!-- Hero Section -->
+    <section id="hero" class="relative bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-600 text-white pt-32 pb-24 px-4 overflow-hidden">
+        <!-- Background elements (optional subtle pattern) -->
+         <div class="absolute inset-0 opacity-10">
+             <!-- Example pattern -->
+            <svg class="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none" fill="currentColor"><polygon points="0,100 100,0 100,100"/></svg>
+        </div>
+        <div class="container mx-auto text-center relative z-10">
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-4 leading-tight">Find & Book Your Perfect Flight</h1>
+            <p class="text-lg md:text-xl text-indigo-100 mb-10 max-w-3xl mx-auto">Enter your travel details below to discover amazing destinations and unbeatable offers.</p>
 
+             <!-- Search Form (Moved into Hero) -->
+            <div class="max-w-4xl mx-auto bg-white/90 backdrop-blur-sm p-6 md:p-8 rounded-xl shadow-2xl">
+                <form th:action="@{/search}" method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label for="source" class="block text-sm font-medium text-gray-700 text-left mb-1">From</label>
+                        <input type="text" id="source" name="source" required placeholder="Departure City"
+                               class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 placeholder-gray-500">
+                    </div>
+                    <div>
+                        <label for="destination" class="block text-sm font-medium text-gray-700 text-left mb-1">To</label>
+                        <input type="text" id="destination" name="destination" required placeholder="Arrival City"
+                               class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 placeholder-gray-500">
+                    </div>
+                    <div class="sm:col-span-2 lg:col-span-1 grid grid-cols-2 gap-4">
+                        <div class="col-span-2 sm:col-span-1">
+                             <label for="departureDate" class="block text-sm font-medium text-gray-700 text-left mb-1">Departure Date</label>
+                             <input type="date" id="departureDate" name="departureDate" required th:value="${#temporals.format(T(java.time.LocalDate).now(), 'yyyy-MM-dd')}"
+                                   class="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900">
+                        </div>
+                         <!-- Add Return Date or Passenger Count later if needed -->
+                         <div class="col-span-2 sm:col-span-1 flex items-end">
+                             <button type="submit" class="w-full btn btn-primary py-3 text-base flex items-center justify-center"> <!-- Use btn class -->
+                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-2"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" /></svg>
+                                 Search
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Destinations Section -->
+    <section id="popular-destinations" class="py-16 md:py-24 bg-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Popular Destinations</h2>
+            <p class="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">Explore top destinations booked by our travelers.</p>
+            <!-- Placeholder Content -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Example Card -->
+                <div class="bg-gray-100 rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <img src="https://placehold.co/600x400/CCCCCC/FFFFFF?text=Destination+1" alt="Destination 1" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg text-gray-800">Destination 1</h3>
+                        <p class="text-sm text-gray-600">From $XXX</p>
+                    </div>
+                </div>
+                 <!-- Repeat Card 3 more times -->
+                <div class="bg-gray-100 rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300"> <img src="https://placehold.co/600x400/DDDDDD/FFFFFF?text=Destination+2" alt="Destination 2" class="w-full h-48 object-cover"><div class="p-4"><h3 class="font-semibold text-lg text-gray-800">Destination 2</h3><p class="text-sm text-gray-600">From $YYY</p></div> </div>
+                <div class="bg-gray-100 rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300"> <img src="https://placehold.co/600x400/EEEEEE/FFFFFF?text=Destination+3" alt="Destination 3" class="w-full h-48 object-cover"><div class="p-4"><h3 class="font-semibold text-lg text-gray-800">Destination 3</h3><p class="text-sm text-gray-600">From $ZZZ</p></div> </div>
+                <div class="bg-gray-100 rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300"> <img src="https://placehold.co/600x400/FAFAFA/FFFFFF?text=Destination+4" alt="Destination 4" class="w-full h-48 object-cover"><div class="p-4"><h3 class="font-semibold text-lg text-gray-800">Destination 4</h3><p class="text-sm text-gray-600">From $AAA</p></div> </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Offers Section -->
+    <section id="offers" class="py-16 md:py-24 bg-gray-50"> <!-- Slightly different bg color -->
+        <div class="container mx-auto px-4 text-center">
+             <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Special Offers</h2>
+             <p class="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">Don't miss out on our limited-time deals.</p>
+             <!-- Placeholder Content -->
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <!-- Example Offer Card -->
+                 <div class="bg-white rounded-lg shadow-md p-6 flex flex-col md:flex-row items-center space-x-0 md:space-x-6">
+                     <div class="flex-shrink-0 w-full md:w-1/3 mb-4 md:mb-0">
+                        <img src="https://placehold.co/400x300/CCCCCC/FFFFFF?text=Offer+1" alt="Offer 1" class="rounded-md object-cover w-full">
+                     </div>
+                     <div class="text-center md:text-left">
+                         <h3 class="font-semibold text-xl text-indigo-700">Weekend Getaway</h3>
+                         <p class="text-gray-600 mt-2">Fly to Destination X for just $BBB this weekend!</p>
+                         <a href="#" class="mt-4 inline-block btn btn-secondary text-sm">Learn More</a>
+                     </div>
+                 </div>
+                 <!-- Repeat Offer Card -->
+                  <div class="bg-white rounded-lg shadow-md p-6 flex flex-col md:flex-row items-center space-x-0 md:space-x-6"> <div class="flex-shrink-0 w-full md:w-1/3 mb-4 md:mb-0"> <img src="https://placehold.co/400x300/DDDDDD/FFFFFF?text=Offer+2" alt="Offer 2" class="rounded-md object-cover w-full"> </div> <div class="text-center md:text-left"> <h3 class="font-semibold text-xl text-indigo-700">Business Class Sale</h3> <p class="text-gray-600 mt-2">Upgrade your experience on select routes.</p> <a href="#" class="mt-4 inline-block btn btn-secondary text-sm">Learn More</a> </div> </div>
+             </div>
+        </div>
+    </section>
+
+    <!-- Footer Placeholder -->
+    <footer class="bg-gray-800 text-gray-400 py-8 text-center text-sm">
+        &copy; [[${#dates.year(#dates.createNow())}]] AirlineReserve. All rights reserved.
+    </footer>
+
+    <!-- Link to new page-specific JavaScript -->
+    <script th:src="@{/js/index.js}"></script>
 </body>
 </html>
+

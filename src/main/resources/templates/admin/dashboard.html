@@ -2,153 +2,185 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboard - Flight Management</title>
+    <!-- Alpine.js -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" th:href="@{/css/custom.css}" /> <!-- Add custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/custom.css}" />
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         .delay-form-container { display: none; }
-        /* Styles for the modal */
+        /* Modal styles */
         .modal-overlay {
-            position: fixed; inset: 0;
-            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+            position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6);
             display: flex; align-items: center; justify-content: center;
-            z-index: 100; /* Ensure it's on top */
-            opacity: 0; visibility: hidden; /* Hidden by default */
+            z-index: 100; opacity: 0; visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-        .modal-overlay.active {
-            opacity: 1; visibility: visible; /* Visible when active */
-        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-            max-width: 500px; /* Limit width */
-            width: 90%;
-            transform: scale(0.95); /* Start slightly smaller */
-            transition: transform 0.3s ease;
+            background-color: white; padding: 2rem; border-radius: 0.75rem;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            max-width: 500px; width: 90%; transform: scale(0.95); transition: transform 0.3s ease;
         }
-        .modal-overlay.active .modal-content {
-            transform: scale(1); /* Scale to full size when active */
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        /* Content Wrapper */
+        .content-wrapper { padding-left: 16rem; transition: padding-left 0.3s ease-in-out; }
+        aside.-translate-x-full + .content-wrapper { padding-left: 0; }
+        /* Custom Button Styling (example, can refine in custom.css) */
+        .header-btn {
+             @apply text-xs px-3 py-1.5 md:px-4 md:py-2 md:text-sm rounded-md font-semibold shadow-sm transition-colors duration-150;
+        }
+        .header-btn-secondary {
+             @apply bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+        }
+         .header-btn-primary {
+             @apply bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+        }
+        /* Subtle Zebra Striping */
+        tbody tr:nth-child(odd):not(.delay-form-container) {
+             background-color: #f9fafb; /* gray-50 */
+        }
+        tbody tr:not(.delay-form-container):hover {
+             background-color: #eff6ff; /* blue-50 */
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div th:replace="~{header :: navbar}"></div>
+<body class="bg-gray-100" x-data="{ isOpen: true }">
 
-    <main class="container mx-auto px-4 py-8">
-        <!-- Messages -->
-         <div th:if="${successMessage}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline" th:text="${successMessage}"></span>
-        </div>
-        <div th:if="${errorMessage}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline" th:text="${errorMessage}"></span>
-        </div>
+    <!-- Sidebar Fragment -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-       <!-- Example addition in admin/dashboard.html -->
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Flight Management</h1>
-            <div class="flex flex-wrap gap-2">
-                <!-- New Link -->
-                <a th:href="@{/admin/analytics}" class="bg-purple-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700">
-                    View Analytics
-                </a>
-                <a th:href="@{/admin/staff/manage}" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
-                    Manage Staff
-                </a>
-                <a th:href="@{/admin/passengers/manage}" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-700">
-                    Manage Passengers
-                </a>
-                <a th:href="@{/admin/flights/add}" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">
-                    + Add New Flight
-                </a>
+    <!-- Main Content Area -->
+    <div class="content-wrapper">
+
+        <!-- Admin Header Fragment -->
+        <div th:replace="~{header :: navbar}"></div>
+
+        <!-- Main Page Content -->
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class = "bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-lg shadow-md mb-6 flex justify-between items-center">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+             <div class="flex items-center justify-between h-16">
+                <!-- Left side: Title -->
+                <div class="flex items-center">
+                    <!-- Page Title (Updated color) -->
+                    <h1 class="text-3xl font-bold text-white">Manage Flight Operations</h1>
+                </div>
+
+                <!-- Right side: Action Buttons (Updated Styling) -->
+                 <div class="flex items-center space-x-2 md:space-x-3">
+                     <!-- Secondary Button Style (Adjusted for light text on dark bg) -->
+                     <a th:href="@{/admin/analytics}" class="text-indigo-100 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Analytics</a>
+                     <a th:href="@{/admin/staff/manage}" class="text-indigo-100 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Staff</a>
+                     <a th:href="@{/admin/passengers/manage}" class="text-indigo-100 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">Passengers</a>
+                     <!-- Primary Button Style (Adjusted for contrast) -->
+                     <a th:href="@{/admin/flights/add}" class="bg-white text-indigo-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-50 shadow-sm transition-colors">+ Add Flight</a>
+                </div>
+             </div>
+        </div>
             </div>
-        </div>
 
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-white">
-                    <thead class="bg-gray-200">
-                        <tr>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">ID</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Airline</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Route</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Departure</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Seats (Avail/Total)</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Price</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-700">
-                        <!-- Using FlightSummaryDTO -->
-                        <th:block th:each="flight, iterStat : ${flights}">
-                            <tr class="border-b border-gray-200 hover:bg-gray-50">
-                                <td class="py-4 px-4 font-bold" th:text="${flight.flightId}">1</td>
-                                <td class="py-4 px-4" th:text="${flight.airlineName}">Emirates</td> <!-- Updated -->
-                                <td class="py-4 px-4"><span th:text="${flight.source}">DXB</span> &rarr; <span th:text="${flight.destination}">LHR</span></td>
-                                <td class="py-4 px-4" th:text="${#temporals.format(flight.departure, 'dd MMM, HH:mm')}">22 Oct, 10:00</td>
-                                <td class="py-4 px-4">
-                                   <span class="px-2 py-1 rounded-full text-xs font-semibold"
-                                         th:text="${flight.status}"
-                                         th:classappend="${#strings.equalsIgnoreCase(flight.status, 'Scheduled')} ? 'bg-blue-100 text-blue-800' :
-                                                        (${#strings.equalsIgnoreCase(flight.status, 'Delayed')} ? 'bg-yellow-100 text-yellow-800' :
-                                                        (${#strings.equalsIgnoreCase(flight.status, 'Cancelled')} ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'))">
-                                   Scheduled</span>
-                                </td>
-                                <td class="py-4 px-4"><span th:text="${flight.seatsAvailable}">150</span> / <span th:text="${flight.seatsTotal}">200</span></td> <!-- Updated -->
-                                <td class="py-4 px-4 font-semibold" th:text="${flight.formattedBasePrice}">$650.00</td> <!-- Updated -->
-                                <td class="py-4 px-4 text-sm space-x-2">
-                                     <div th:if="${!#strings.equalsIgnoreCase(flight.status, 'Cancelled')}">
-                                        <form th:action="@{/admin/flights/{id}/cancel(id=${flight.flightId})}" method="post" class="inline"
-                                              th:id="'cancel-form-' + ${flight.flightId}" th:attr="data-flight-id=${flight.flightId}"
-                                              onsubmit="return confirmCancel(this);">
-                                            <button type="button"
-                                                    th:attr="onclick='showCancelConfirmation(\'' + ${flight.flightId} + '\', \'cancel-form-' + ${flight.flightId} + '\')'"
-                                                    class="text-red-600 hover:text-red-800 font-medium">Cancel</button>
+            <!-- Messages -->
+             <div th:if="${successMessage}" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-md shadow-sm" role="alert">
+                <p class="font-bold">Success</p><p th:text="${successMessage}"></p>
+            </div>
+            <div th:if="${errorMessage}" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-sm" role="alert">
+                 <p class="font-bold">Error</p><p th:text="${errorMessage}"></p>
+            </div>
+
+
+            <!-- Flight Table Card -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden"> <!-- Increased shadow -->
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50"> <!-- Subtle bg for table title area -->
+                     <h2 class="text-lg font-semibold text-gray-700">All Current Flights</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <!-- Updated thead styling -->
+                        <thead class="bg-gray-200 text-gray-600">
+                             <tr>
+                                <th class="py-3 px-5 text-left text-xs font-bold uppercase tracking-wider">ID</th>
+                                <th class="py-3 px-5 text-left text-xs font-bold uppercase tracking-wider">Airline</th>
+                                <th class="py-3 px-5 text-left text-xs font-bold uppercase tracking-wider">Route</th>
+                                <th class="py-3 px-5 text-left text-xs font-bold uppercase tracking-wider">Departure</th>
+                                <th class="py-3 px-5 text-left text-xs font-bold uppercase tracking-wider">Status</th>
+                                <th class="py-3 px-5 text-left text-xs font-bold uppercase tracking-wider">Seats (Avail/Total)</th>
+                                <th class="py-3 px-5 text-left text-xs font-bold uppercase tracking-wider">Base Price</th>
+                                <th class="py-3 px-5 text-left text-xs font-bold uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                         <!-- Updated tbody styling -->
+                         <tbody class="text-gray-700 divide-y divide-gray-200">
+                            <th:block th:each="flight, iterStat : ${flights}">
+                                <!-- Apply hover effect and transition -->
+                                <tr class="transition-colors duration-150">
+                                    <td class="py-4 px-5 font-bold text-gray-900" th:text="${flight.flightId}">1</td>
+                                    <td class="py-4 px-5" th:text="${flight.airlineName}">Emirates</td>
+                                    <td class="py-4 px-5"><span th:text="${flight.source}">DXB</span> &rarr; <span th:text="${flight.destination}">LHR</span></td>
+                                    <td class="py-4 px-5 text-sm" th:text="${#temporals.format(flight.departure, 'dd MMM, HH:mm')}">22 Oct, 10:00</td>
+                                    <td class="py-4 px-5">
+                                       <!-- Enhanced Status Badges -->
+                                       <span class="px-2.5 py-0.5 rounded-full text-xs font-bold capitalize"
+                                             th:text="${flight.status}"
+                                             th:classappend="${#strings.equalsIgnoreCase(flight.status, 'Scheduled')} ? 'bg-blue-100 text-blue-800 border border-blue-300' :
+                                                            (${#strings.equalsIgnoreCase(flight.status, 'Delayed')} ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' :
+                                                            (${#strings.equalsIgnoreCase(flight.status, 'Cancelled')} ? 'bg-red-100 text-red-800 border border-red-300' : 'bg-gray-100 text-gray-800 border border-gray-300'))">
+                                       Scheduled</span>
+                                    </td>
+                                    <td class="py-4 px-5 text-sm"><span th:text="${flight.seatsAvailable}">150</span> / <span th:text="${flight.seatsTotal}">200</span></td>
+                                    <td class="py-4 px-5 font-semibold" th:text="${flight.formattedBasePrice}">$650.00</td>
+                                    <td class="py-4 px-5 text-sm space-x-3 whitespace-nowrap"> <!-- Increased spacing -->
+                                        <div th:if="${!#strings.equalsIgnoreCase(flight.status, 'Cancelled')}">
+                                            <!-- Cancel Button (Form + Modal Trigger) -->
+                                            <form th:action="@{/admin/flights/{id}/cancel(id=${flight.flightId})}" method="post" class="inline"
+                                                  th:id="'cancel-form-' + ${flight.flightId}" th:attr="data-flight-id=${flight.flightId}"
+                                                  onsubmit="return false;"> <!-- Prevent default submit initially -->
+                                                <button type="button"
+                                                        th:attr="onclick='showCancelConfirmation(\'' + ${flight.flightId} + '\', \'cancel-form-' + ${flight.flightId} + '\')'"
+                                                        class="font-semibold text-red-600 hover:text-red-900 transition-colors">Cancel</button>
+                                            </form>
+                                            <!-- Delay Button (Toggle) -->
+                                            <button th:attr="onclick='toggleDelayForm(\'delay-form-' + ${flight.flightId} + '\')'" type="button" class="font-semibold text-yellow-600 hover:text-yellow-900 transition-colors">Delay</button>
+                                        </div>
+                                        <span th:if="${#strings.equalsIgnoreCase(flight.status, 'Cancelled')}" class="text-gray-500 italic text-xs">Cancelled</span>
+                                    </td>
+                                </tr>
+                                <!-- Hidden Delay Row -->
+                                <tr th:id="'delay-form-' + ${flight.flightId}" class="delay-form-container bg-blue-50 border-b border-blue-200">
+                                    <td colspan="8" class="px-5 py-4">
+                                         <form th:action="@{/admin/flights/{id}/delay(id=${flight.flightId})}" method="post" class="flex items-center space-x-3">
+                                            <label th:for="'newDeparture-' + ${flight.flightId}" class="text-xs font-medium text-gray-700 whitespace-nowrap">New Departure:</label>
+                                            <input th:id="'newDeparture-' + ${flight.flightId}" type="datetime-local" name="newDeparture" th:value="${#temporals.format(flight.departure, 'yyyy-MM-dd''T''HH:mm')}" required class="text-xs p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+
+                                            <label th:for="'newArrival-' + ${flight.flightId}" class="text-xs font-medium text-gray-700 whitespace-nowrap ml-4">New Arrival:</label>
+                                            <input th:id="'newArrival-' + ${flight.flightId}" type="datetime-local" name="newArrival" th:value="${flight.arrival != null ? #temporals.format(flight.departure.plus(T(java.time.Duration).between(flight.departure, flight.arrival)), 'yyyy-MM-dd''T''HH:mm') : ''}" required class="text-xs p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+
+                                            <button type="submit" class="btn bg-yellow-500 hover:bg-yellow-600 text-white text-xs py-1.5 px-3 ml-4">Confirm Delay</button>
+                                            <button type="button" th:attr="onclick='toggleDelayForm(\'delay-form-' + ${flight.flightId} + '\')'" class="btn btn-secondary text-xs py-1.5 px-3 ml-2">Close</button>
                                         </form>
-                                        <button th:attr="onclick='toggleDelayForm(\'delay-form-' + ${flight.flightId} + '\')'" type="button" class="text-yellow-600 hover:text-yellow-800 font-medium ml-2">Delay</button>
-                                    </div>
-                                    <span th:if="${#strings.equalsIgnoreCase(flight.status, 'Cancelled')}" class="text-gray-500">N/A</span>
-                                </td>
-                            </tr>
-                            <!-- Hidden Delay Row (references flight DTO) -->
-                            <tr th:id="'delay-form-' + ${flight.flightId}" class="delay-form-container bg-gray-50 border-b border-gray-200">
-                                <td colspan="8" class="px-4 py-3">
-                                     <form th:action="@{/admin/flights/{id}/delay(id=${flight.flightId})}" method="post" class="flex items-center space-x-2">
-                                        <label th:for="'newDeparture-' + ${flight.flightId}" class="text-xs font-medium text-gray-600">New Departure:</label>
-                                        <input th:id="'newDeparture-' + ${flight.flightId}" type="datetime-local" name="newDeparture" th:value="${#temporals.format(flight.departure, 'yyyy-MM-dd''T''HH:mm')}" required class="text-xs p-1 border rounded">
-
-                                        <label th:for="'newArrival-' + ${flight.flightId}" class="text-xs font-medium text-gray-600 ml-4">New Arrival:</label>
-                                        <!-- Need arrival time on DTO or calculate based on original duration -->
-                                        <input th:id="'newArrival-' + ${flight.flightId}" type="datetime-local" name="newArrival" th:value="${#temporals.format(flight.arrival, 'yyyy-MM-dd''T''HH:mm')}" required class="text-xs p-1 border rounded">
-
-                                        <button type="submit" class="bg-yellow-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-yellow-600 ml-4">Confirm Delay</button>
-                                        <button type="button" th:attr="onclick='toggleDelayForm(\'delay-form-' + ${flight.flightId} + '\')'" class="text-gray-500 text-xs font-medium ml-2 hover:text-gray-700">Close</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        </th:block>
-                    </tbody>
-                </table>
+                                    </td>
+                                </tr>
+                            </th:block>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div> <!-- /content-wrapper -->
 
-    <!-- *** NEW: Modal Structure (Initially Hidden) *** -->
+    <!-- Modal -->
     <div id="cancelModalOverlay" class="modal-overlay">
         <div class="modal-content">
             <h2 class="text-xl font-bold mb-4 text-gray-800">Confirm Cancellation</h2>
-            <p id="cancelModalMessage" class="text-gray-600 mb-6">Are you sure you want to cancel this flight? This action cannot be undone and will cancel all confirmed bookings.</p>
+            <p id="cancelModalMessage" class="text-gray-600 mb-6">Are you sure?</p>
             <div class="flex items-center mb-6">
                  <input type="checkbox" id="disableConfirmCheckbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                  <label for="disableConfirmCheckbox" class="ml-2 block text-sm text-gray-700">Don't ask again this session</label>
             </div>
             <div class="flex justify-end space-x-4">
-                <button type="button" onclick="closeCancelModal()" class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Close</button>
-                <button type="button" id="confirmCancelButton" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">Confirm Cancel</button>
+                <button type="button" onclick="closeCancelModal()" class="btn btn-secondary">Close</button>
+                <button type="button" id="confirmCancelButton" class="btn btn-danger">Confirm Cancel</button>
             </div>
         </div>
     </div>
@@ -177,50 +209,81 @@
         function showCancelConfirmation(flightId, formId) {
             // Check if confirmation is disabled for this session
             if (sessionStorage.getItem(disableConfirmKey) === 'true') {
+                console.log("Confirmation disabled, submitting form:", formId); // Debugging
                 document.getElementById(formId).submit(); // Submit immediately
                 return;
             }
 
             // Store the ID of the form we need to submit if confirmed
             formToSubmit = formId;
+            console.log("Storing form to submit:", formToSubmit); // Debugging
 
             // Update modal message
             var messageElement = document.getElementById('cancelModalMessage');
-            messageElement.textContent = 'Cancel Flight ' + flightId + '? This cancels all CONFIRMED bookings.';
+            if(messageElement) {
+                messageElement.textContent = 'Cancel Flight ' + flightId + '? This cancels all CONFIRMED bookings.';
+            }
 
             // Show the modal
             var modalOverlay = document.getElementById('cancelModalOverlay');
-            modalOverlay.classList.add('active');
+            if(modalOverlay) {
+                modalOverlay.classList.add('active');
+                 console.log("Showing modal"); // Debugging
+            } else {
+                console.error("Modal overlay not found!");
+            }
         }
 
         // Function called by the "Close" button in the modal
         function closeCancelModal() {
             var modalOverlay = document.getElementById('cancelModalOverlay');
-            modalOverlay.classList.remove('active');
+             if(modalOverlay) {
+                modalOverlay.classList.remove('active');
+            }
             formToSubmit = null; // Clear the stored form ID
+            console.log("Modal closed, formToSubmit cleared"); // Debugging
         }
 
         // Add event listener for the modal's "Confirm Cancel" button
-        document.getElementById('confirmCancelButton').addEventListener('click', function() {
-            if (formToSubmit) {
-                // Check if the user wants to disable confirmation for the session
-                var disableCheckbox = document.getElementById('disableConfirmCheckbox');
-                if (disableCheckbox.checked) {
-                    sessionStorage.setItem(disableConfirmKey, 'true');
-                }
+        var confirmButton = document.getElementById('confirmCancelButton');
+        if(confirmButton) {
+            confirmButton.addEventListener('click', function() {
+                console.log("Confirm button clicked, form to submit:", formToSubmit); // Debugging
+                if (formToSubmit) {
+                    // Check if the user wants to disable confirmation for the session
+                    var disableCheckbox = document.getElementById('disableConfirmCheckbox');
+                    if (disableCheckbox && disableCheckbox.checked) {
+                        sessionStorage.setItem(disableConfirmKey, 'true');
+                         console.log("Confirmation disabled for session"); // Debugging
+                    }
 
-                // Submit the stored form
-                document.getElementById(formToSubmit).submit();
-            }
-            closeCancelModal(); // Close modal after action
-        });
+                    // Submit the stored form
+                    var formElement = document.getElementById(formToSubmit);
+                    if(formElement) {
+                        console.log("Submitting form:", formToSubmit); // Debugging
+                        formElement.submit();
+                    } else {
+                        console.error("Form element not found for ID:", formToSubmit);
+                    }
+                } else {
+                     console.warn("No form ID was stored to submit.");
+                }
+                closeCancelModal(); // Close modal after action
+            });
+        } else {
+            console.error("Confirm cancel button not found!");
+        }
+
 
         // Optional: Close modal if clicking outside the content area
-        document.getElementById('cancelModalOverlay').addEventListener('click', function(event) {
-            if (event.target === this) { // Check if click was on the overlay itself
-                closeCancelModal();
-            }
-        });
+        var modalOverlayElement = document.getElementById('cancelModalOverlay');
+        if (modalOverlayElement) {
+            modalOverlayElement.addEventListener('click', function(event) {
+                if (event.target === this) { // Check if click was on the overlay itself
+                    closeCancelModal();
+                }
+            });
+        }
     </script>
 </body>
 </html>

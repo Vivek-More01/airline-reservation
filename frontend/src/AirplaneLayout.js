@@ -1,95 +1,173 @@
-import React from "react";
+import React, { useMemo } from "react"; // Import useMemo for performance
 import Seat from "./Seat";
 
-const AirplaneLayout = ({ onSelectSeat, selectedSeat, bookedSeats }) => {
-  // Defines the visual layout of the A320
-  const layout = [];
-  // const seatLetters = ["A", "B", "C", "D", "E", "F"];
+// Accept seatLayoutJson as a prop
+const AirplaneLayout = ({
+  onSelectSeat,
+  selectedSeats,
+  bookedSeats,
+  seatLayoutJson,
+}) => {
+  // useMemo will parse the JSON only when the seatLayoutJson string changes
+  const parsedLayoutData = useMemo(() => {
+    if (!seatLayoutJson) {
+      console.error("Seat layout JSON is missing.");
+      return null; // Handle missing layout data
+    }
+    try {
+      const fullJson = JSON.parse(seatLayoutJson);
+      // --- CHANGE: Access data under the 'seatmap' key ---
+      return fullJson.seatmap || null; // Return null if 'seatmap' key doesn't exist
+    } catch (error) {
+      console.error("Failed to parse seat layout JSON:", error);
+      return null; // Handle invalid JSON
+    }
+  }, [seatLayoutJson]); // Dependency array ensures parsing only happens if JSON changes
 
-  // Add labels and structure
-  layout.push({
-    type: "structure",
-    label: "--- Galley / Lavatory ---",
-    key: "s1",
-  });
-  const labels = ["", "A", "B", "C", "", "D", "E", "F", ""];
-  labels.forEach((label, index) =>
-    layout.push({ type: "label", label, key: `l${index}` })
-  );
-  // let col = 0;
-  // Generate seat rows
-  for (let i = 1; i <= 25; i++) {
-    let j = 1;
-    labels.forEach((x) => {
-      if (x === ""){
-        layout.push({ type: "label", label: "", key: `r${j}${i}l}` });
-        j++;
-        return
-      }
-      const seatNumber = `${i}${x}`;
-      let specialType = null;
-      if (i <= 4) specialType = "premium";
-      if (i === 10 || i === 11) specialType = "exit-row";
-      if (i === 9 || i === 24 || i === 25) specialType = "limited-recline";
+  // --- Dynamic Layout Generation ---
+  const generateLayout = () => {
+    // --- CHANGE: Use parsedLayoutData which is now the content of 'seatmap' ---
+    if (!parsedLayoutData) {
+      return [
+        <div key="error" className="structure full-width error">
+          Error loading seat layout.
+        </div>,
+      ];
+    }
 
+    const layout = [];
+    // --- CHANGE: Destructure directly from parsedLayoutData ---
+    const { rows, columns, seatTypeMap, structures } = parsedLayoutData;
+
+    // --- CHANGE: Handle structures based on 'row' property ---
+    // Add structures before row 1 (row: 0)
+    if (structures) {
+      structures
+        .filter((s) => s.row === 0)
+        .forEach((structure, index) => {
+          // You can add more complex rendering based on structure.position (LEFT, RIGHT, CENTER) later
+          layout.push({
+            type: "structure",
+            label: `--- ${structure.type} (${structure.position}) ---`,
+            key: `s_front_${index}`,
+          });
+        });
+    }
+
+    // Add column header labels
+    columns.forEach((col, index) => {
       layout.push({
-        number: seatNumber,
-        special: specialType,
-        key: seatNumber,
+        type: "label",
+        label: col === "AISLE" ? "" : col,
+        key: `h${index}`,
       });
     });
 
-    if (i === 9 || i === 15) {
-      layout.push({
-        type: "structure",
-        label: "--- Emergency Exit ---",
-        key: `e${i}`,
+    // Add seat rows
+    for (let i = 1; i <= rows; i++) {
+      columns.forEach((col) => {
+        if (col === "AISLE") {
+          // Render aisle space or row number based on position relative to other AISLEs or edges
+          const colIndex = columns.indexOf(col);
+          const isEdgeOrNearAisle =
+            colIndex === 0 ||
+            colIndex === columns.length - 1 ||
+            (colIndex > 0 && columns[colIndex - 1] === "AISLE") ||
+            (colIndex < columns.length - 1 &&
+              columns[colIndex + 1] === "AISLE");
+          if (isEdgeOrNearAisle) {
+            layout.push({
+              type: "label",
+              label: i,
+              key: `r${i}${col}${colIndex}`,
+            }); // Use colIndex for unique key
+          } else {
+            layout.push({
+              type: "aisle",
+              label: "",
+              key: `r${i}${col}${colIndex}`,
+            });
+          }
+        } else {
+          const seatNumber = `${i}${col}`;
+          // Determine seat type from map, default to Economy
+          // --- CHANGE: Access seatTypeMap from parsedLayoutData ---
+          const seatType = seatTypeMap?.[seatNumber] || "Economy";
+          layout.push({ number: seatNumber, type: seatType, key: seatNumber });
+        }
       });
+
+      // --- CHANGE: Add structures located *after* this specific row ---
+      if (structures) {
+        structures
+          .filter((s) => s.row === i)
+          .forEach((structure, index) => {
+            layout.push({
+              type: "structure",
+              label: `--- ${structure.type} (${structure.position}) ---`,
+              key: `s_after_${i}_${index}`,
+            });
+          });
+      }
     }
-  }
-  layout.push({
-    type: "structure",
-    label: "--- Lavatory / Galley ---",
-    key: "s2",
-  });
-  console.log(layout);
+
+    // Note: Structures defined with row > total rows might not appear depending on exact logic.
+    // We handle row 0 before headers and row 'i' after row 'i' seats.
+
+    return layout;
+  };
+
+  const gridLayout = generateLayout();
+  // --- CHANGE: Calculate gridCols from parsedLayoutData ---
+  const gridCols = parsedLayoutData ? parsedLayoutData.columns.length : 1;
+
   return (
     <div className="airplane">
-      <div className="airplane-grid">
-        {layout.map((item) => {
-          if (item.type === "label"){  
-            if (item.label === " ") {
-              return (
-                <div key={item.key} className="label empty-label">
-                  &nbsp;
-                </div>
-              );
-            } else {
-              return (
-                <div key={item.key} className="label">
-                  {item.label}
-                </div>
-              );
-            }
-          }
+      {/* Apply dynamic grid columns */}
+      <div
+        className="airplane-grid"
+        style={{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))` }}
+      >
+        {gridLayout.map((item) => {
+          // Render logic based on item type (label, aisle, structure, seat)
+          if (item.type === "aisle")
+            return (
+              <div key={item.key} className="aisle">
+                {item.label}
+              </div>
+            );
+          if (item.type === "label")
+            return (
+              <div key={item.key} className="structure">
+                {item.label}
+              </div>
+            );
+          // Ensure structures span full width
           if (item.type === "structure")
             return (
-              <div key={item.key} className="structure full-width">
+              <div
+                key={item.key}
+                className="structure full-width"
+                style={{ gridColumn: `1 / span ${gridCols}` }}
+              >
                 {item.label}
               </div>
             );
 
+          // It's a seat
           const status = bookedSeats.includes(item.number)
             ? "occupied"
             : "available";
+          const isSelected = selectedSeats.includes(item.number);
+
           return (
             <Seat
               key={item.key}
               seatNumber={item.number}
               status={status}
-              type={item.special}
+              type={item.type} // Pass the type determined from JSON
               onSelect={onSelectSeat}
-              isSelected={selectedSeat === item.number}
+              isSelected={isSelected}
             />
           );
         })}

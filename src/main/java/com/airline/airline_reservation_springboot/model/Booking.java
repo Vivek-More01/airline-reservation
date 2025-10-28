@@ -44,6 +44,11 @@ public class Booking {
     @JsonBackReference // Keep this for User-Booking relationship
     private User user;
 
+    // --- NEW: Relationship to Passenger ---
+    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE }) // Cascade needed if saving new Passenger with Booking
+    @JoinColumn(name = "passenger_id", nullable = false)
+    private Passenger passenger; // The person travelling
+
     // --- Getters and Setters ---
     public Integer getBookingId() {
         return bookingId;
@@ -116,4 +121,11 @@ public class Booking {
     public void setUser(User user) {
         this.user = user;
     }
+
+    public Passenger getPassenger() {
+        return passenger;
+    } // New Getter
+    public void setPassenger(Passenger passenger) {
+        this.passenger = passenger;
+    } // New Setter
 }

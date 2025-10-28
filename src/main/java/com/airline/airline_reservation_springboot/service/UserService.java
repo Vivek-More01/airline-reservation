@@ -32,8 +32,12 @@ public class UserService {
      * @return The saved user.
      */
     public User registerUser(User user) {
+        return registerUser(user, "Passenger");
+    }
+
+    public User registerUser(User user, String role) {
         // Hash the password before saving it to the database
-        user.setRole("Passenger"); // Default role
+        user.setRole(role);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         // user.setPasswordHash(passwordEncoder.encode(user.getPassword()));;
         
@@ -100,7 +104,7 @@ public class UserService {
     }
     
     public UserDTO convertToDTO(User user) {
-        return new UserDTO(user.getUserId(), user.getName(), user.getEmail(), user.getRole());
+        return new UserDTO(user.getUserId(), user.getName(), user.getEmail(), user.getRole(), user.getAccountStatus());
     }
 
     // --- NEW METHODS FOR ADMIN USER MANAGEMENT ---

@@ -5,9 +5,12 @@ import com.airline.airline_reservation_springboot.dto.BookingSummaryDTO;
 import com.airline.airline_reservation_springboot.model.*; // Import all models
 import com.airline.airline_reservation_springboot.repository.BookingRepository;
 import com.airline.airline_reservation_springboot.repository.FlightRepository;
+import com.airline.airline_reservation_springboot.repository.PassengerRepository;
 import com.airline.airline_reservation_springboot.repository.PricingRuleRepository; // Import PricingRuleRepository
 import com.airline.airline_reservation_springboot.repository.SeatTypeRepository; // Import SeatTypeRepository
 import org.hibernate.Hibernate; // Import Hibernate
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,8 +20,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.regex.Matcher; // Import Matcher
-import java.util.regex.Pattern; // Import Pattern
+// import java.util.regex.Matcher; // Import Matcher
+// import java.util.regex.Pattern; // Import Pattern
 import java.util.stream.Collectors;
 
 @Service
@@ -28,54 +31,66 @@ public class BookingService {
     private final FlightRepository flightRepository;
     private final SeatTypeRepository seatTypeRepository; // Inject SeatTypeRepository
     private final PricingRuleRepository pricingRuleRepository; // Inject PricingRuleRepository
+    private final PassengerRepository passengerRepository;
+    private final FlightService flightService; // Inject FlightService
+    private static final Logger log = LoggerFactory.getLogger(BookingService.class);
 
-    // Updated Constructor
+    // Update constructor
     public BookingService(BookingRepository bookingRepository,
-            FlightRepository flightRepository,
-            SeatTypeRepository seatTypeRepository,
-            PricingRuleRepository pricingRuleRepository) {
+                          FlightRepository flightRepository,
+                          SeatTypeRepository seatTypeRepository,
+                          PricingRuleRepository pricingRuleRepository,
+                          PassengerRepository passengerRepository,
+                          FlightService flightService) { // Add FlightService
         this.bookingRepository = bookingRepository;
         this.flightRepository = flightRepository;
         this.seatTypeRepository = seatTypeRepository;
         this.pricingRuleRepository = pricingRuleRepository;
+        this.passengerRepository = passengerRepository;
+        this.flightService = flightService; // Assign FlightService
     }
-
+    
     // --- UPDATED createBooking Method ---
     @Transactional
-    public Booking createBooking(User user, int flightId, String seatNumber) {
-        // 1. Fetch Flight and ensure related entities are loaded
+    public Booking createBooking(User bookingUser, int flightId, String seatNumber, Passenger passengerDetails) {
         Flight flight = flightRepository.findById(flightId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid flight ID: " + flightId));
+        // Eager load related entities
         Hibernate.initialize(flight.getAirline());
-        Hibernate.initialize(flight.getAircraft()); // Needed for layout/type logic
+        Hibernate.initialize(flight.getAircraft());
+        Hibernate.initialize(flight.getBookings()); // Needed for isSeatTaken check
 
-        // 2. Basic Checks
+        // --- Basic Checks --- (remain the same)
         if (flight.getSeatsAvailable() <= 0 && !isSeatTaken(flight, seatNumber)) {
-            throw new IllegalStateException("No seats available on this flight.");
-        }
+            /* ... */ }
         if (!"Scheduled".equalsIgnoreCase(flight.getStatus()) && !"Delayed".equalsIgnoreCase(flight.getStatus())) {
-            throw new IllegalStateException(
-                    "This flight cannot be booked currently (Status: " + flight.getStatus() + ").");
-        }
+            /* ... */ }
         if (isSeatTaken(flight, seatNumber)) {
-            throw new IllegalStateException("Seat " + seatNumber + " is already taken.");
-        }
+            /* ... */ }
 
-        // 3. Determine Seat Type and Calculate Price
-        SeatType seatType = determineSeatType(flight.getAircraft(), seatNumber); // Use helper
-        BigDecimal calculatedPrice = calculatePrice(flight, seatType); // Use helper
+        // --- Determine Seat Type and Calculate Price (USING NEW METHOD) ---
+        String seatTypeName = flightService.getSeatTypeNameFromLayout(flightId, seatNumber); // Get type name from
+                                                                                             // FlightService
+        SeatType seatType = seatTypeRepository.findByTypeNameIgnoreCase(seatTypeName) // Find the entity
+                .orElseThrow(() -> new IllegalStateException("SeatType not found in database: " + seatTypeName));
+        BigDecimal calculatedPrice = calculatePrice(flight, seatType); // Calculate price
 
-        // 4. Update Flight Availability
+        // --- Save Passenger ---
+        Passenger savedPassenger = passengerRepository.save(passengerDetails);
+
+        // --- Update Flight Availability ---
         flight.setSeatsAvailable(flight.getSeatsAvailable() - 1);
         flightRepository.save(flight);
 
-        // 5. Create and Save Booking
+        // --- Create and Save Booking ---
         Booking booking = new Booking();
-        booking.setUser(user);
+        // ... set fields ...
+        booking.setUser(bookingUser);
+        booking.setPassenger(savedPassenger);
         booking.setFlight(flight);
         booking.setSeatNo(seatNumber);
-        booking.setSeatType(seatType); // Set the determined SeatType
-        booking.setCalculatedPrice(calculatedPrice); // Set the calculated price
+        booking.setSeatType(seatType); // Set the found SeatType entity
+        booking.setCalculatedPrice(calculatedPrice);
         booking.setBookingDate(LocalDateTime.now());
         booking.setStatus("CONFIRMED");
         booking.setPnr(generatePnr());
@@ -185,76 +200,98 @@ public class BookingService {
     public boolean changeSeatNumber(Integer bookingId, String newSeatNumber) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found with ID: " + bookingId));
+        log.debug("Attempting seat change for booking {} to {}", bookingId, newSeatNumber);
 
         if (!"CONFIRMED".equalsIgnoreCase(booking.getStatus()) && !"CHECKED-IN".equalsIgnoreCase(booking.getStatus())) {
+            log.warn("Seat change denied for booking {} due to status: {}", bookingId, booking.getStatus());
             throw new IllegalArgumentException("Cannot change seat for a booking with status: " + booking.getStatus());
         }
 
         Flight flight = booking.getFlight();
-        Hibernate.initialize(flight.getAircraft()); // Need aircraft for seat type logic
-        Hibernate.initialize(flight.getBookings()); // Need bookings to check availability
+        Hibernate.initialize(flight.getAircraft());
+        Hibernate.initialize(flight.getBookings());
 
         // Check if the NEW seat is available (ignoring the passenger's CURRENT seat)
         boolean isNewSeatTaken = flight.getBookings().stream()
-                .filter(b -> !b.getBookingId().equals(bookingId))
+                .filter(b -> !b.getBookingId().equals(bookingId)) // Exclude the current booking
                 .filter(b -> "CONFIRMED".equalsIgnoreCase(b.getStatus())
                         || "CHECKED-IN".equalsIgnoreCase(b.getStatus()))
                 .anyMatch(b -> newSeatNumber.equalsIgnoreCase(b.getSeatNo()));
 
         if (isNewSeatTaken) {
+            log.warn("Seat change failed for booking {}: New seat {} is already taken on flight {}", bookingId,
+                    newSeatNumber, flight.getFlightId());
             throw new IllegalStateException("Seat " + newSeatNumber + " is already taken on this flight.");
         }
 
-        // --- Determine new SeatType and potentially recalculate price ---
-        SeatType newSeatType = determineSeatType(flight.getAircraft(), newSeatNumber);
-        // Decide if price should change. For simplicity, we won't change it now.
-        // BigDecimal newCalculatedPrice = calculatePrice(flight, newSeatType);
-        // booking.setCalculatedPrice(newCalculatedPrice);
+        // --- Determine new SeatType and Recalculate Price ---
+        String newSeatTypeName = flightService.getSeatTypeNameFromLayout(flight.getFlightId(), newSeatNumber);
+        SeatType newSeatType = seatTypeRepository.findByTypeNameIgnoreCase(newSeatTypeName)
+                .orElseThrow(() -> new IllegalStateException("SeatType not found in database: " + newSeatTypeName));
 
+        BigDecimal newCalculatedPrice = calculatePrice(flight, newSeatType);
+        log.info("Recalculated price for booking {} seat change to {}: {}", bookingId, newSeatNumber,
+                newCalculatedPrice);
+
+        // --- Update Booking ---
         booking.setSeatNo(newSeatNumber);
-        booking.setSeatType(newSeatType); // Update the seat type association
+        booking.setSeatType(newSeatType);
+        booking.setCalculatedPrice(newCalculatedPrice); // Update the stored price
         bookingRepository.save(booking);
+
+        log.info("Successfully changed seat for booking {} to {} (Type: {}, Price: {})",
+                bookingId, newSeatNumber, newSeatTypeName, newCalculatedPrice);
+
+        // NOTE: Does not handle payment difference. This only updates the record.
         return true;
     }
 
     // --- Helper Methods ---
 
     /** Determines the SeatType based on aircraft layout and seat number. */
-    private SeatType determineSeatType(Aircraft aircraft, String seatNumber) {
-        // Basic logic: Use row number. Customize with JSON parsing later if needed.
-        Pattern pattern = Pattern.compile("(\\d+)([A-Za-z]+)"); // Regex to extract row number
-        Matcher matcher = pattern.matcher(seatNumber);
-        int row = 0;
-        if (matcher.matches()) {
-            row = Integer.parseInt(matcher.group(1));
-        } else {
-            throw new IllegalArgumentException("Invalid seat number format: " + seatNumber);
-        }
+    // private SeatType determineSeatType(Aircraft aircraft, String seatNumber) {
+    //     // Basic logic: Use row number. Customize with JSON parsing later if needed.
+    //     Pattern pattern = Pattern.compile("(\\d+)([A-Za-z]+)"); // Regex to extract row number
+    //     Matcher matcher = pattern.matcher(seatNumber);
+    //     int row = 0;
+    //     if (matcher.matches()) {
+    //         row = Integer.parseInt(matcher.group(1));
+    //     } else {
+    //         throw new IllegalArgumentException("Invalid seat number format: " + seatNumber);
+    //     }
 
-        // 1. Determine the final typeName string first
-        String finalTypeName = "Economy"; // Default
+    //     // 1. Determine the final typeName string first
+    //     String finalTypeName = "Economy"; // Default
 
-        if (aircraft.getAircraftModel().contains("A320")) {
-            if (row <= 4)
-                finalTypeName = "Business";
-            else if (row == 9 || row == 10)
-                finalTypeName = "Exit Row";
-            else if (row == 24 || row == 25)
-                finalTypeName = "Limited Recline";
-        } else if (aircraft.getAircraftModel().contains("777")) {
-            if (row <= 8)
-                finalTypeName = "Business";
-            else if (row >= 10 && row <= 14)
-                finalTypeName = "Premium Economy";
-            else if (row == 15)
-                finalTypeName = "Exit Row";
-        }
-        // Add more aircraft types here...
-        String TypeName = finalTypeName;
-        // Find the SeatType entity by name
-        return seatTypeRepository.findByTypeNameIgnoreCase(finalTypeName)
-                .orElseThrow(() -> new IllegalStateException("SeatType not found in database: " + TypeName));
-    }
+    //     if (aircraft.getAircraftModel().contains("A320")) {
+    //         if (row <= 4)
+    //             finalTypeName = "Business";
+    //         else if (row == 9 || row == 10)
+    //             finalTypeName = "Exit Row";
+    //         else if (row == 24 || row == 25)
+    //             finalTypeName = "Limited Recline";
+    //     } else if (aircraft.getAircraftModel().contains("777")) {
+    //         if (row <= 8)
+    //             finalTypeName = "Business";
+    //         else if (row >= 10 && row <= 14)
+    //             finalTypeName = "Premium Economy";
+    //         else if (row == 15)
+    //             finalTypeName = "Exit Row";
+    //     }
+    //     // Add more aircraft types here...
+    //     String TypeName = finalTypeName;
+    //     // Find the SeatType entity by name
+    //     return seatTypeRepository.findByTypeNameIgnoreCase(finalTypeName)
+    //             .orElseThrow(() -> new IllegalStateException("SeatType not found in database: " + TypeName));
+    // }
+
+    /**
+     * Determines the SeatType based on aircraft layout and seat number via
+     * FlightService.
+     */
+    // private SeatType determineSeatType(Aircraft aircraft, String seatNumber) {
+    //     return flightService.getSeatTypeNameFromLayout(aircraft.getAircraftId(), seatNumber);
+    // }
 
     /**
      * Calculates the final price based on flight base price and seat type rules.

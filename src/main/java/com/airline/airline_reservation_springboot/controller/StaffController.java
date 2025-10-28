@@ -2,9 +2,13 @@ package com.airline.airline_reservation_springboot.controller;
 
 import com.airline.airline_reservation_springboot.dto.FlightManifestDTO;
 import com.airline.airline_reservation_springboot.dto.FlightSummaryDTO;
+import com.airline.airline_reservation_springboot.model.Airline;
+import com.airline.airline_reservation_springboot.repository.AirlineRepository;
 import com.airline.airline_reservation_springboot.service.BookingService;
 // import com.airline.airline_reservation_springboot.model.Flight;
 import com.airline.airline_reservation_springboot.service.FlightService;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 // import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,11 +27,13 @@ public class StaffController {
 
     private final FlightService flightService;
     private final BookingService bookingService; // Inject BookingService
+    private final AirlineRepository airlineRepository; // Inject AirlineRepository
 
     // Update constructor
-    public StaffController(FlightService flightService, BookingService bookingService) {
+    public StaffController(FlightService flightService, BookingService bookingService, AirlineRepository airlineRepository) {
         this.flightService = flightService;
         this.bookingService = bookingService;
+        this.airlineRepository = airlineRepository; // Assign AirlineRepository
     }
 
     /**
@@ -46,19 +53,21 @@ public class StaffController {
      * Displays the passenger manifest (list of bookings) for a specific flight.
      */
     @GetMapping("/flights/{flightId}/manifest")
-    public String showPassengerManifest(@PathVariable("flightId") Integer flightId, Model model) {
-        Optional<FlightManifestDTO> manifestOpt = flightService.getFlightManifestDetails(flightId);
-        System.out.println("Accessing manifest for flight ID: " + flightId);
-        System.out.println("Manifest found: " + manifestOpt.isPresent());
-        
+    public String showPassengerManifest(@PathVariable("flightId") Integer flightId,
+            @RequestParam(name = "statusFilter", required = false) String statusFilter, // Added filter param
+            Model model) {
+
+        // Pass the filter to the service layer
+        Optional<FlightManifestDTO> manifestOpt = flightService.getFlightManifestDetails(flightId, statusFilter);
+
         if (manifestOpt.isPresent()) {
             model.addAttribute("manifest", manifestOpt.get());
-            System.out.println("Number of passengers: " + manifestOpt.get());
+            model.addAttribute("flightId", flightId);
+            model.addAttribute("currentFilter", statusFilter); // Pass filter back to highlight active button
         } else {
             model.addAttribute("flightNotFound", true);
         }
-        
-        return "staff/manifest"; 
+        return "staff/manifest";
     }
 
     @PostMapping("/bookings/{bookingId}/checkin")
@@ -109,5 +118,42 @@ public class StaffController {
         }
         // Redirect back to the manifest for the same flight
         return "redirect:/staff/flights/" + flightId + "/manifest";
+    }
+
+    // --- Staff Advanced Search (UPDATED) ---
+    @GetMapping("/search-flights")
+    public String showAdvancedSearchPage(
+            @RequestParam(name="airlineId", required = false) Integer airlineId, // <-- Added airlineId param
+            @RequestParam(name="source", required = false) String source,
+            @RequestParam(name="destination", required = false) String destination,
+            @RequestParam(name="status", required = false) String status,
+            @RequestParam(name="startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(name="endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Model model) {
+
+        // Fetch all airlines for the dropdown
+        List<Airline> airlines = airlineRepository.findAll();
+        model.addAttribute("airlines", airlines);
+
+        // Perform search if any parameter is present
+        boolean performSearch = airlineId != null || source != null || destination != null || status != null || startDate != null || endDate != null;
+        if (performSearch) {
+             // Pass airlineId to the service method
+             List<FlightSummaryDTO> results = flightService.searchFlightsForStaff(airlineId, source, destination, status, startDate, endDate);
+             model.addAttribute("flights", results);
+             model.addAttribute("searchPerformed", true);
+        } else {
+            model.addAttribute("searchPerformed", false);
+        }
+
+        // Pass back search parameters to keep form populated
+        model.addAttribute("airlineId", airlineId); // <-- Pass selected airlineId back
+        model.addAttribute("source", source);
+        model.addAttribute("destination", destination);
+        model.addAttribute("status", status);
+        model.addAttribute("startDate", startDate);
+        model.addAttribute("endDate", endDate);
+
+        return "staff/search-flights";
     }
 }

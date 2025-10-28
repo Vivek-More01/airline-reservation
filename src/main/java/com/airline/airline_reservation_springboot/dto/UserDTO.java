@@ -10,23 +10,32 @@ public class UserDTO {
     private String name;
     private String email;
     private String role;
+    private String accountStatus;
 
     // Default constructor (often needed for data binding)
     public UserDTO() {
     }
 
     // Constructor to easily map from the User entity
-    public UserDTO(Integer userId, String name, String email, String role) {
+    public UserDTO(Integer userId, String name, String email, String role, String accountStatus) {
         this.userId = userId;
         this.name = name;
         this.email = email;
         this.role = role;
+        this.accountStatus = accountStatus;
     }
 
     // Standard Getters and Setters
     // --- CHANGE: Getter/Setter use Integer ---
     public Integer getUserId() {
         return userId;
+    }
+
+    public String getAccountStatus() {
+        return accountStatus;
+    }
+    public void setAccountStatus(String accountStatus) {
+        this.accountStatus = accountStatus;
     }
 
     public void setUserId(Integer userId) {

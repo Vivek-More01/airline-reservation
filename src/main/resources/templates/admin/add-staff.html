@@ -4,52 +4,71 @@
     <meta charset="UTF-8">
     <title>Add New Staff</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style> body { font-family: 'Inter', sans-serif; } </style>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script> <!-- Add Alpine.js -->
+    <link rel="stylesheet" th:href="@{/css/custom.css}" />
+    <style> body { font-family: 'Inter', sans-serif; }
+        .content-wrapper {
+            padding-left: 16rem; /* Adjust if sidebar width (w-64) changes */
+            transition: padding-left 0.3s ease-in-out; /* Smooth transition */
+        }
+        /* Removes left padding when the sidebar has the '-translate-x-full' class (is hidden) */
+        aside.-translate-x-full + .content-wrapper {
+             padding-left: 0;
+        } </style>
 </head>
-<body class="bg-gray-100">
-    <div th:replace="~{header :: navbar}"></div>
-
+<body class="bg-gray-100" x-data="{ isOpen: true }">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div> <!-- Assuming sidebar -->
+     <div class="content-wrapper"> <!-- Assuming sidebar -->
+        <div th:replace="~{header :: navbar}"></div>
+        <!-- *** UPDATED Admin Header Bar Styling *** -->
     <main class="container mx-auto px-4 py-8">
-        <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md">
-            <h1 class="text-2xl font-bold text-gray-800 mb-6">Add New Staff Member</h1>
+        <div th:replace="~{fragments/admin_header :: adminHeader(pageTitle='System Analytics Overview')}"></div>
+            <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md card"> <!-- Use card class -->
+                <!-- <h1 class="text-2xl font-bold text-gray-800 mb-6">Add New Staff Member</h1> REMOVED - Title now in header -->
 
-            <!-- Display validation errors -->
-            <div th:if="${#fields.hasErrors('${staffUser.*}')}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Please correct the errors below:</strong>
-                <ul>
-                    <li th:each="err : ${#fields.errors('${staffUser.*}')}" th:text="${err}">Error message</li>
-                </ul>
+                <!-- Display validation errors -->
+                <div th:if="${#fields.hasErrors('${staffUser.*}') or passwordError != null}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <strong class="font-bold">Please correct the errors below:</strong>
+                    <ul class="list-disc pl-5 mt-2">
+                        <li th:each="err : ${#fields.errors('${staffUser.*}')}" th:text="${err}">Error message</li>
+                        <li th:if="${passwordError}" th:text="${passwordError}">Password error message</li>
+                    </ul>
+                </div>
+
+                <!-- Bind to UserDTO (staffUser) -->
+                <form th:action="@{/admin/staff/add}" th:object="${staffUser}" method="post" class="space-y-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                        <input type="text" id="name" th:field="*{name}" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                         <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-red-500 text-xs"></span>
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                        <input type="email" id="email" th:field="*{email}" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                         <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-red-500 text-xs"></span>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <!-- *** CHANGE: Removed th:field, use standard name attribute *** -->
+                        <input type="password" id="password" name="password" required
+                               placeholder="Min 6 characters"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <!-- Display manual password error if passed from controller -->
+                         <span th:if="${passwordError}" class="text-red-500 text-xs" th:text="${passwordError}"></span>
+                    </div>
+
+                    <div class="flex justify-end pt-4 space-x-3">
+                        <a th:href="@{/admin/staff/manage}" class="btn btn-secondary">Cancel</a> <!-- Use btn class -->
+                        <button type="submit" class="btn btn-primary">Add Staff Member</button> <!-- Use btn class -->
+                    </div>
+                </form>
             </div>
-
-            <form th:action="@{/admin/staff/add}" th:object="${staffUser}" method="post" class="space-y-4">
-                <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" id="name" th:field="*{name}" required
-                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <input type="email" id="email" th:field="*{email}" required
-                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                     <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-red-500 text-xs"></span>
-                </div>
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="password" th:field="*{password}" required
-                           placeholder="Min 6 characters"
-                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                    <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-red-500 text-xs"></span>
-                </div>
-
-                <!-- Role is set automatically in the controller, no need for input -->
-
-                <div class="flex justify-end pt-4 space-x-3">
-                    <a th:href="@{/admin/staff/manage}" class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Cancel</a>
-                    <button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">Add Staff Member</button>
-                </div>
-            </form>
-        </div>
-    </main>
+        </main>
+    </div> <!-- /content-wrapper -->
+    <!-- Alpine.js needed for sidebar -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>
 

@@ -4,113 +4,168 @@
     <meta charset="UTF-8">
     <title>Passenger Manifest</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/custom.css}" />
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        /* Style to hide the seat change form initially */
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; /* Lighter gray background */ }
         .seat-change-form-container { display: none; }
+        /* Modal styles remain the same */
+        .modal-overlay {
+            position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6); /* Slightly darker overlay */
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: white; padding: 2rem; border-radius: 0.75rem; /* Slightly larger radius */
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); /* Larger shadow */
+            max-width: 500px; width: 90%; transform: scale(0.95); transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        /* Subtle Zebra Striping for table */
+        tbody tr:nth-child(odd):not(.seat-change-form-container) {
+             background-color: #f9fafb; /* gray-50 */
+        }
+        tbody tr:not(.seat-change-form-container):hover {
+             background-color: #eff6ff; /* blue-50 */
+        }
+
     </style>
 </head>
 <body class="bg-gray-100">
     <div th:replace="~{header :: navbar}"></div>
     <main class="container mx-auto px-4 py-8">
-        <a th:href="@{/staff/dashboard}" class="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">&larr; Back to Dashboard</a>
+        <a th:href="@{/staff/dashboard}" class="text-indigo-600 hover:text-indigo-800 mb-6 inline-flex items-center text-sm font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-1">
+              <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clip-rule="evenodd" />
+            </svg>
+            Back to Dashboard
+        </a>
 
          <!-- Messages -->
-         <div th:if="${successMessage}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline" th:text="${successMessage}"></span>
+         <div th:if="${successMessage}" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded-md shadow-sm" role="alert">
+            <p class="font-bold">Success</p>
+            <p th:text="${successMessage}"></p>
         </div>
-        <div th:if="${errorMessage}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline" th:text="${errorMessage}"></span>
+        <div th:if="${errorMessage}" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md shadow-sm" role="alert">
+             <p class="font-bold">Error</p>
+            <p th:text="${errorMessage}"></p>
         </div>
 
         <div th:if="${manifest != null}">
-            <!-- *** UPDATED Header with Load Factor *** -->
-            <div class="flex justify-between items-baseline mb-6">
+            <!-- Header Card -->
+            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-lg shadow-md mb-6 flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-800" th:text="${manifest.airline} + ' - Passenger Manifest'">Flight Manifest</h1>
-                    <p class="text-xl text-gray-600" th:text="${manifest.source} + ' to ' + ${manifest.destination}">Route Details</p>
+                    <h1 class="text-2xl font-bold" th:text="${manifest.airline} + ' - Passenger Manifest'">Flight Manifest</h1>
+                    <p class="text-blue-100" th:text="${manifest.source} + ' to ' + ${manifest.destination}">Route Details</p>
                 </div>
                 <div class="text-right">
-                    <span class="text-sm font-semibold text-gray-500 uppercase">Load Factor</span>
-                    <p class="text-2xl font-bold text-indigo-600" th:text="${manifest.formattedLoadFactor}">75.0%</p>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-blue-200">Load Factor</span>
+                    <p class="text-3xl font-bold" th:text="${manifest.formattedLoadFactor}">75.0%</p>
                 </div>
             </div>
 
+            <!-- *** Filter Buttons *** -->
+            <div class="mb-4 flex space-x-2">
+                <a th:href="@{/staff/flights/{id}/manifest(id=${flightId})}"
+                   class="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                   th:classappend="${currentFilter == null ? 'filter-btn-active' : 'filter-btn'}">All</a>
+                <a th:href="@{/staff/flights/{id}/manifest(id=${flightId}, statusFilter='CONFIRMED')}"
+                   class="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                   th:classappend="${#strings.equalsIgnoreCase(currentFilter, 'CONFIRMED')} ? 'filter-btn-active' : 'filter-btn'">Confirmed</a>
+                <a th:href="@{/staff/flights/{id}/manifest(id=${flightId}, statusFilter='CHECKED-IN')}"
+                   class="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                   th:classappend="${#strings.equalsIgnoreCase(currentFilter, 'CHECKED-IN')} ? 'filter-btn-active' : 'filter-btn'">Checked-In</a>
+                <a th:href="@{/staff/flights/{id}/manifest(id=${flightId}, statusFilter='CANCELLED')}"
+                   class="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                   th:classappend="${#strings.equalsIgnoreCase(currentFilter, 'CANCELLED')} ? 'filter-btn-active' : 'filter-btn'">Cancelled</a>
+            </div>
 
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <div th:if="${manifest.isPassengerListEmpty()}" class="text-center py-10">
-                    <p class="text-lg text-gray-500">No passengers have booked this flight yet.</p>
+            <!-- Manifest Table Card -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div th:if="${manifest.isPassengerListEmpty()}" class="text-center py-16">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"> <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /> </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No Passengers</h3>
+                    <p class="mt-1 text-sm text-gray-500">No passengers have booked this flight yet.</p>
                 </div>
-                <table th:if="${!manifest.isPassengerListEmpty()}" class="min-w-full bg-white">
-                    <thead class="bg-gray-200">
-                        <tr>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Passenger Name</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Seat No.</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">PNR</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                            <th class="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-700">
-                        <!-- Loop for each passenger row -->
-                        <th:block th:each="passenger : ${manifest.passengers}">
-                            <tr class="border-b border-gray-200">
-                                <td class="py-4 px-4 font-semibold" th:text="${passenger.name}">John Doe</td>
-                                <td class="py-4 px-4" th:text="${passenger.email}">john.doe@example.com</td>
-                                <td class="py-4 px-4 font-bold" th:text="${passenger.seatNo}">14A</td>
-                                <td class="py-4 px-4 font-mono text-indigo-600" th:text="${passenger.pnr}">EKXYZ123</td>
-                                <td class="py-4 px-4">
-                                    <span class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
-                                          th:text="${passenger.status}"
-                                          th:classappend="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED')} ? 'bg-blue-100 text-blue-800' :
-                                                         (${#strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')} ? 'bg-green-100 text-green-800' :
-                                                         (${#strings.equalsIgnoreCase(passenger.status, 'CANCELLED')} ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'))">
-                                    CONFIRMED</span>
-                                </td>
-                                 <td class="py-4 px-4 text-sm space-x-2 whitespace-nowrap"> <!-- Prevent wrapping -->
-                                     <!-- Check-in Button -->
-                                     <form th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED')}"
-                                           th:action="@{/staff/bookings/{id}/checkin(id=${passenger.bookingId})}" method="post" class="inline">
-                                         <input type="hidden" name="flightId" th:value="${flightId}" />
-                                         <button type="submit" class="text-green-600 hover:text-green-800 font-medium">Check-In</button>
-                                     </form>
-
-                                      <!-- Cancel Button -->
-                                     <form th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED') or #strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')}"
-                                           th:action="@{/staff/bookings/{id}/cancel(id=${passenger.bookingId})}" method="post" class="inline"
-                                           onsubmit="return confirm('Cancel booking for ' + [[${passenger.name}]] + ' (PNR: ' + [[${passenger.pnr}]] + ')?');">
-                                          <input type="hidden" name="flightId" th:value="${flightId}" />
-                                         <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Cancel</button>
-                                     </form>
-
-                                     <!-- *** NEW: Change Seat Button (Triggers JS) *** -->
-                                     <button th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED') or #strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')}"
-                                             type="button" class="text-blue-600 hover:text-blue-800 font-medium"
-                                             th:attr="onclick='toggleSeatChangeForm(\'' + ${passenger.bookingId} + '\')'">
-                                             Change Seat
-                                     </button>
-
-                                     <span th:if="${#strings.equalsIgnoreCase(passenger.status, 'CANCELLED')}" class="text-gray-500 text-xs">Cancelled</span>
-                                 </td>
+                <div th:if="${!manifest.isPassengerListEmpty()}" class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-gray-100 border-b border-gray-300">
+                            <tr>
+                                <th class="py-3 px-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Passenger</th>
+                                <th class="py-3 px-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Seat / PNR</th>
+                                <th class="py-3 px-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
+                                <th class="py-3 px-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
                             </tr>
-                            <!-- *** NEW: Hidden Row for Seat Change Form *** -->
-                             <tr th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED') or #strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')}"
-                                 th:id="'seat-change-form-' + ${passenger.bookingId}" class="seat-change-form-container bg-gray-50 border-b border-gray-200">
-                                <td colspan="6" class="px-4 py-3"> <!-- Span across columns -->
-                                     <form th:action="@{/staff/bookings/{id}/change-seat(id=${passenger.bookingId})}" method="post" class="flex items-center space-x-2">
-                                         <input type="hidden" name="flightId" th:value="${flightId}" /> <!-- Include flightId -->
-                                        <label th:for="'newSeat-' + ${passenger.bookingId}" class="text-xs font-medium text-gray-600">New Seat:</label>
-                                        <input th:id="'newSeat-' + ${passenger.bookingId}" type="text" name="newSeatNumber" th:value="${passenger.seatNo}" required placeholder="e.g., 15B"
-                                               class="text-xs p-1 border rounded w-20">
-                                        <button type="submit" class="bg-blue-500 text-white text-xs font-semibold py-1 px-3 rounded hover:bg-blue-600 ml-2">Confirm Change</button>
-                                        <button type="button" th:attr="onclick='toggleSeatChangeForm(\'' + ${passenger.bookingId} + '\')'" class="text-gray-500 text-xs font-medium ml-2 hover:text-gray-700">Close</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        </th:block>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="text-gray-700 divide-y divide-gray-200">
+                            <th:block th:each="passenger : ${manifest.passengers}">
+                                <!-- Apply subtle zebra striping and hover -->
+                                <tr class="hover:bg-blue-50 transition-colors">
+                                    <td class="py-3 px-5 font-semibold">
+                                        <div th:text="${passenger.name}">John Doe</div>
+                                        <div class="text-xs text-gray-500 font-normal" th:text="${passenger.email}">john.doe@example.com</div>
+                                    </td>
+                                    <td class="py-3 px-5">
+                                        Seat: <span class="font-bold text-gray-900" th:text="${passenger.seatNo}">14A</span><br>
+                                        <span class="text-xs text-gray-500 font-mono" th:text="${passenger.pnr}">EKXYZ123</span>
+                                    </td>
+                                    <td class="py-3 px-5">
+                                        <!-- Enhanced Status Badges -->
+                                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold capitalize"
+                                              th:text="${passenger.status}"
+                                              th:classappend="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED')} ? 'bg-blue-100 text-blue-800' :
+                                                             (${#strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')} ? 'bg-green-100 text-green-800' :
+                                                             (${#strings.equalsIgnoreCase(passenger.status, 'CANCELLED')} ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'))">
+                                        CONFIRMED</span>
+                                    </td>
+                                     <td class="py-3 px-5 text-sm space-x-3 whitespace-nowrap"> <!-- Increased spacing -->
+                                         <!-- Check-in Button -->
+                                         <form th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED')}"
+                                               th:action="@{/staff/bookings/{id}/checkin(id=${passenger.bookingId})}" method="post" class="inline">
+                                             <input type="hidden" name="flightId" th:value="${flightId}" />
+                                             <button type="submit" class="text-green-600 hover:text-green-900 font-semibold">Check-In</button>
+                                         </form>
+
+                                          <!-- Cancel Button -->
+                                         <form th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED') or #strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')}"
+                                               th:action="@{/staff/bookings/{id}/cancel(id=${passenger.bookingId})}" method="post" class="inline"
+                                               th:id="'cancel-booking-form-' + ${passenger.bookingId}">
+                                              <input type="hidden" name="flightId" th:value="${flightId}" />
+                                             <button type="button"
+                                                     th:attr="onclick='showCancelBookingConfirmation(\'' + ${passenger.bookingId} + '\', \'' + ${#strings.escapeJavaScript(passenger.name)} + '\', \'cancel-booking-form-' + ${passenger.bookingId} + '\')'"
+                                                     class="text-red-600 hover:text-red-900 font-semibold">Cancel</button>
+                                         </form>
+
+                                         <!-- Change Seat Button -->
+                                         <button th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED') or #strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')}"
+                                                 type="button" class="text-blue-600 hover:text-blue-900 font-semibold"
+                                                 th:attr="onclick='toggleSeatChangeForm(\'' + ${passenger.bookingId} + '\')'">
+                                                 Change Seat
+                                         </button>
+
+                                         <span th:if="${#strings.equalsIgnoreCase(passenger.status, 'CANCELLED')}" class="text-gray-500 text-xs italic">Cancelled</span>
+                                     </td>
+                                </tr>
+                                <!-- Hidden Row for Seat Change Form -->
+                                 <tr th:if="${#strings.equalsIgnoreCase(passenger.status, 'CONFIRMED') or #strings.equalsIgnoreCase(passenger.status, 'CHECKED-IN')}"
+                                     th:id="'seat-change-form-' + ${passenger.bookingId}" class="seat-change-form-container bg-blue-50 border-b border-blue-200">
+                                    <td colspan="6" class="px-5 py-4"> <!-- Adjusted padding -->
+                                         <form th:action="@{/staff/bookings/{id}/change-seat(id=${passenger.bookingId})}" method="post" class="flex items-center space-x-3">
+                                             <input type="hidden" name="flightId" th:value="${flightId}" />
+                                            <label th:for="'newSeat-' + ${passenger.bookingId}" class="text-sm font-medium text-gray-700">New Seat:</label>
+                                            <input th:id="'newSeat-' + ${passenger.bookingId}" type="text" name="newSeatNumber" th:value="${passenger.seatNo}" required placeholder="e.g., 15B"
+                                                   class="text-sm p-2 border border-gray-300 rounded-md w-24 focus:ring-indigo-500 focus:border-indigo-500">
+                                            <button type="submit" class="btn btn-primary text-sm py-1.5 px-4">Confirm Change</button> <!-- Use btn class -->
+                                            <button type="button" th:attr="onclick='toggleSeatChangeForm(\'' + ${passenger.bookingId} + '\')'" class="btn btn-secondary text-sm py-1.5 px-4">Close</button> <!-- Use btn class -->
+                                        </form>
+                                    </td>
+                                </tr>
+                            </th:block>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         <div th:if="${manifest == null}" class="text-center py-10">
@@ -119,14 +174,31 @@
         </div>
     </main>
 
-     <!-- *** NEW: JavaScript for Toggling Seat Change Form *** -->
+    <!-- Modal Structure for Booking Cancellation (Styling slightly enhanced) -->
+    <div id="cancelBookingModalOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Confirm Booking Cancellation</h2>
+            <p id="cancelBookingModalMessage" class="text-gray-700 mb-6">Are you sure?</p>
+            <div class="flex items-center mb-6">
+                 <input type="checkbox" id="disableBookingConfirmCheckbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                 <label for="disableBookingConfirmCheckbox" class="ml-2 block text-sm text-gray-700">Don't ask again this session</label>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="closeCancelBookingModal()" class="btn btn-secondary">Close</button>
+                <button type="button" id="confirmCancelBookingButton" class="btn btn-danger">Confirm Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript (remains the same) -->
     <script>
+        // --- Seat Change Toggle ---
         function toggleSeatChangeForm(bookingId) {
             const formRowId = 'seat-change-form-' + bookingId;
             // Hide all potentially open seat change forms first
             document.querySelectorAll('.seat-change-form-container').forEach(formRow => {
                 if (formRow.id !== formRowId) {
-                   formRow.style.display = 'none';
+                formRow.style.display = 'none';
                 }
             });
 
@@ -140,7 +212,73 @@
                 }
             }
         }
-    </script>
+
+        // --- Booking Cancellation Modal Logic ---
+        let bookingFormToSubmit = null; // Stores the ID of the form to submit
+        const disableBookingConfirmKey = 'disableBookingCancelConfirm'; // Key for sessionStorage
+
+        function showCancelBookingConfirmation(bookingId, passengerName, formId) {
+            // Check if confirmation is disabled for this session
+            if (sessionStorage.getItem(disableBookingConfirmKey) === 'true') {
+                document.getElementById(formId).submit(); // Submit immediately if disabled
+                return;
+            }
+            bookingFormToSubmit = formId; // Store the form ID to submit later
+
+            // Update the message in the modal
+            var messageElement = document.getElementById('cancelBookingModalMessage');
+            if(messageElement) {
+                messageElement.textContent = 'Cancel booking for passenger ' + passengerName + ' (Booking ID: ' + bookingId + ')?';
+            }
+
+            // Show the modal
+            var modalOverlay = document.getElementById('cancelBookingModalOverlay');
+            if(modalOverlay) {
+                modalOverlay.classList.add('active');
+            }
+        }
+
+        function closeCancelBookingModal() {
+            // Hide the modal
+            var modalOverlay = document.getElementById('cancelBookingModalOverlay');
+            if(modalOverlay) {
+                modalOverlay.classList.remove('active');
+            }
+            bookingFormToSubmit = null; // Clear the stored form ID
+        }
+
+        // Add event listener to the "Confirm Cancel" button inside the modal
+        var confirmBookingButton = document.getElementById('confirmCancelBookingButton');
+        if(confirmBookingButton) {
+            confirmBookingButton.addEventListener('click', function() {
+                if (bookingFormToSubmit) {
+                    // Check if the "Don't ask again" checkbox is checked
+                    var disableCheckbox = document.getElementById('disableBookingConfirmCheckbox');
+                    if (disableCheckbox && disableCheckbox.checked) {
+                        // If checked, store the preference in sessionStorage
+                        sessionStorage.setItem(disableBookingConfirmKey, 'true');
+                    }
+                    // Find the form using the stored ID and submit it
+                    var formElement = document.getElementById(bookingFormToSubmit);
+                    if(formElement) {
+                        formElement.submit();
+                    }
+                }
+                closeCancelBookingModal(); // Close the modal after taking action
+            });
+        }
+
+        // Add event listener to close the modal if the overlay background is clicked
+        var bookingModalOverlayElement = document.getElementById('cancelBookingModalOverlay');
+        if (bookingModalOverlayElement) {
+            bookingModalOverlayElement.addEventListener('click', function(event) {
+                // Check if the click was directly on the overlay, not the content inside
+                if (event.target === this) {
+                    closeCancelBookingModal();
+                }
+            });
+        }
+</script>
 </body>
 </html>
 

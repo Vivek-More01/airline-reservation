@@ -65,7 +65,8 @@ public class ApiController {
             Booking newBooking = bookingService.createBooking(
                 managedUser,
                 bookingRequest.getFlightId(),
-                bookingRequest.getSeatNumber()
+                bookingRequest.getSeatNumber(),
+                bookingRequest.getPassengerDetails()
             );
             // 4. On success, return the newly created booking object.
             return ResponseEntity.ok(newBooking);

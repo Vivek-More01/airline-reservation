@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Flight Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/custom.css}" />
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; /* bg-gray-100 */ }
+        /* Subtle Zebra Striping */
+        tbody tr:nth-child(odd) {
+             background-color: #f9fafb; /* gray-50 */
+        }
+        tbody tr:hover {
+             background-color: #eff6ff; /* blue-50 */
+        }
+        /* Content Wrapper */
+        .content-wrapper { padding-left: 16rem; transition: padding-left 0.3s ease-in-out; }
+        aside.-translate-x-full + .content-wrapper { padding-left: 0; }
+    </style>
+</head>
+<body class="bg-gray-100" x-data="{ isOpen: true }">
+    <!-- Use the correct fragment name if different -->
+    <!-- Sidebar Fragment -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <!-- Main Content Area -->
+    <div class="content-wrapper">
+        <div th:replace="~{header :: navbar}"></div>
+    <main class="container mx-auto px-4 py-8">
+        <!-- Colorful Header -->
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-lg shadow-md mb-6 flex justify-between items-center">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+             <div class="flex items-center justify-between h-16">
+             <h1 class="text-3xl font-bold">Advanced Flight Search</h1>
+             <p class="mt-1 text-sm text-gray-600">Filter flights based on various criteria.</p>
+             <!-- Can add a relevant icon here later -->
+        </div>
+        </div>
+        </div>
+
+
+        <!-- Search Form Card -->
+        <div class="card mb-8 bg-white p-6 rounded-lg shadow-md"> <!-- Use card class -->
+            <form th:action="@{/staff/search-flights}" method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-4 items-end">
+                <!-- Airline -->
+                <div>
+                    <label for="airlineId" class="block text-sm font-medium text-gray-700">Airline</label>
+                    <select id="airlineId" name="airlineId" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
+                        <option value="">Any Airline</option>
+                        <option th:each="airline : ${airlines}"
+                                th:value="${airline.airlineId}"
+                                th:text="${airline.airlineName}"
+                                th:selected="${airlineId != null and airlineId == airline.airlineId}">
+                            Airline Name
+                        </option>
+                    </select>
+                </div>
+                <!-- Source -->
+                <div>
+                    <label for="source" class="block text-sm font-medium text-gray-700">Source</label>
+                    <input type="text" id="source" name="source" th:value="${source}" placeholder="e.g., LHR"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                </div>
+                <!-- Destination -->
+                <div>
+                    <label for="destination" class="block text-sm font-medium text-gray-700">Destination</label>
+                    <input type="text" id="destination" name="destination" th:value="${destination}" placeholder="e.g., JFK"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                </div>
+                 <!-- Status -->
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700">Flight Status</label>
+                    <select id="status" name="status" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm">
+                        <option value="">Any Status</option>
+                        <option value="Scheduled" th:selected="${#strings.equalsIgnoreCase(status, 'Scheduled')}">Scheduled</option>
+                        <option value="Delayed" th:selected="${#strings.equalsIgnoreCase(status, 'Delayed')}">Delayed</option>
+                        <option value="Cancelled" th:selected="${#strings.equalsIgnoreCase(status, 'Cancelled')}">Cancelled</option>
+                    </select>
+                </div>
+                <!-- Start Date -->
+                <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-700">Departure From</label>
+                    <input type="date" id="startDate" name="startDate" th:value="${startDate}"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                </div>
+                <!-- End Date -->
+                 <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-700">Departure Until</label>
+                    <input type="date" id="endDate" name="endDate" th:value="${endDate}"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                </div>
+                <!-- Submit Button Area -->
+                <div class="lg:col-span-2 xl:col-span-1 flex items-end space-x-2 pt-4"> <!-- Adjust alignment -->
+                    <button type="submit" class="btn btn-primary w-full sm:w-auto flex-grow flex items-center justify-center py-2.5">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-1.5"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" /></svg>
+                        Search
+                    </button>
+                    <a th:href="@{/staff/search-flights}" class="btn btn-secondary w-full sm:w-auto py-2.5">Clear</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Search Results Section -->
+        <!-- Only render this div if a search was performed -->
+        <div th:if="${searchPerformed}" class="bg-white rounded-lg shadow-lg overflow-hidden">
+             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                 <h2 class="text-lg font-semibold text-gray-700">Search Results</h2>
+            </div>
+             <!-- Message if no results -->
+             <div th:if="${flights == null or flights.isEmpty()}" class="text-center py-12 px-6">
+                <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /> </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No Flights Found</h3>
+                <p class="mt-1 text-sm text-gray-500">No flights matched your search criteria.</p>
+            </div>
+
+            <!-- Table if results exist -->
+            <div th:if="${flights != null and !flights.isEmpty()}" class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-100 border-b border-gray-300">
+                         <tr>
+                            <th class="py-3 px-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Flight</th>
+                            <th class="py-3 px-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Route</th>
+                            <th class="py-3 px-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Departure Time</th>
+                            <th class="py-3 px-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th class="py-3 px-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Occupancy</th>
+                            <th class="py-3 px-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Base Price</th>
+                            <th class="py-3 px-5 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 divide-y divide-gray-200">
+                        <tr th:each="flight : ${flights}" class="transition-colors duration-150">
+                            <td class="py-4 px-5 font-semibold text-gray-900" th:text="${flight.airlineName}">Emirates</td>
+                            <td class="py-4 px-5"><span th:text="${flight.source}">DXB</span> &rarr; <span th:text="${flight.destination}">LHR</span></td>
+                            <td class="py-4 px-5 text-sm" th:text="${#temporals.format(flight.departure, 'dd MMM yyyy, HH:mm')}">22 Oct 2025, 10:00</td>
+                             <td class="py-4 px-5">
+                               <span class="px-2.5 py-0.5 rounded-full text-xs font-bold capitalize"
+                                     th:text="${flight.status}"
+                                     th:classappend="${#strings.equalsIgnoreCase(flight.status, 'Scheduled')} ? 'bg-blue-100 text-blue-800 border border-blue-300' :
+                                                    (${#strings.equalsIgnoreCase(flight.status, 'Delayed')} ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' :
+                                                    (${#strings.equalsIgnoreCase(flight.status, 'Cancelled')} ? 'bg-red-100 text-red-800 border border-red-300' : 'bg-gray-100 text-gray-800 border border-gray-300'))">
+                               Scheduled</span>
+                            </td>
+                            <td class="py-4 px-5 text-sm" th:text="${flight.occupancy} + ' / ' + ${flight.seatsTotal}">150 / 200</td>
+                            <td class="py-4 px-5 font-semibold" th:text="${flight.formattedBasePrice}">$650.00</td>
+                            <td class="py-4 px-5">
+                                <a th:href="@{/staff/flights/{id}/manifest(id=${flight.flightId})}"
+                                   class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ease-in-out duration-150">
+                                    View Manifest
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Alpine.js needed if sidebar is used -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+</html>
+

@@ -5,7 +5,7 @@ import com.airline.airline_reservation_springboot.model.Flight;
 import com.airline.airline_reservation_springboot.model.User;
 
 import java.math.BigDecimal;
-import java.util.Collection;
+// import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
