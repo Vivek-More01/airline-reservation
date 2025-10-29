@@ -1,0 +1,29 @@
+# .dockerignore
+
+# Git files
+.git
+.gitignore
+
+# Maven build output (target is copied selectively in Dockerfile)
+target/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# Log files
+*.log
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Frontend build output (if frontend dir is inside backend repo)
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+```
+
+
+    
