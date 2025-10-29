@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flight Results</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/custom.css}" />
     <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
 <body class="bg-gray-100">
@@ -43,7 +44,7 @@
                             <td class="py-3 px-5 text-sm font-medium" th:text="${flight.formattedBasePrice}">$650.00</td>
                             <td class="py-3 px-5 text-right">
                                 <!-- Link uses flightId from DTO -->
-                                <a th:href="@{'http://localhost:3000/?flightId=' + ${flight.flightId}}"
+                                <a th:href="@{/(flightId=${flight.flightId})}"
                                    class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
                                     Select Seat
                                 </a>

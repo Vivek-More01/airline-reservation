@@ -22,8 +22,15 @@ public class FlightController {
     }
 
     @GetMapping("/")
-    public String showHomePage() {
-        return "index"; // Returns index.html
+    public String homeOrSpa(@RequestParam(name = "flightId", required = false) Integer flightId) {
+        if (flightId != null) {
+            // A flightId is present, assume user wants the seat selection SPA
+            // Forward internally to the SPA's entry point HTML in the static folder
+            return "forward:/app.html";
+        } else {
+            // No flightId, show the regular Thymeleaf homepage
+            return "index";
+        }
     }
 
     @GetMapping("/search")
@@ -36,8 +43,4 @@ public class FlightController {
         model.addAttribute("flights", flights);
         return "flight-results"; // Returns flight-results.html
     }
-
-    // public int getTotalSeats(Flight flight, Model model) {
-    //     return (int) (Math.random() * 100); // Dummy implementation
-    // }
 }

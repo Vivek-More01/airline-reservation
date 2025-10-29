@@ -39,6 +39,7 @@ public class UserService {
         // Hash the password before saving it to the database
         user.setRole(role);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setAccountStatus("ACTIVE");
         // user.setPasswordHash(passwordEncoder.encode(user.getPassword()));;
         
         return userRepository.save(user);
